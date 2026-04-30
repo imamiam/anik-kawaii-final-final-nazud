@@ -1,0 +1,47 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-5">
+        <div class="page-panel bg-white">
+            <div class="page-panel-header">
+                User Registration
+            </div>
+            <div class="page-panel-body">
+                <h2 class="text-center section-title">Create Account</h2>
+                <p class="text-center section-subtitle">Join Kizuna Collections to start ordering your favorites.</p>
+
+                {% if success %}<div class="alert alert-success fw-semibold">{{ success }}</div>{% endif %}
+                {% if error %}<div class="alert alert-danger fw-semibold">{{ error }}</div>{% endif %}
+                
+                <form method="POST">
+                    <div class="mb-3 text-start">
+                        <label class="fw-bold" for="registerName">Name</label>
+                        <input id="registerName" type="text" name="name" class="form-control" placeholder="Juan" autocomplete="name" required>
+                    </div>
+                    <div class="mb-3 text-start">
+                        <label class="fw-bold" for="registerPhone">Phone Number</label>
+                        <input id="registerPhone" type="text" name="phone" class="form-control" placeholder="09XXXXXXXXX" autocomplete="tel" required>
+                    </div>
+                    <div class="mb-3 text-start">
+                        <label class="fw-bold" for="registerEmail">Email</label>
+                        <input id="registerEmail" type="email" name="email" class="form-control" placeholder="name@example.com" autocomplete="email" required>
+                    </div>
+                    <div class="mb-4 text-start">
+                        <label class="fw-bold" for="registerPassword">Password</label>
+                        <input id="registerPassword" type="password" name="password" class="form-control" placeholder="••••••••" autocomplete="new-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-main w-100 fw-bold">
+                        Create Account
+                    </button>
+                </form>
+
+                <div class="mt-4 text-center">
+                    <p class="mb-0 fw-semibold">Already have an account?
+                        <a href="{{ base_url }}/login" class="text-link">Sign in here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

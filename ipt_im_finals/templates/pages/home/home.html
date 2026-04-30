@@ -1,0 +1,208 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+<style>
+    .hero-panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 2rem;
+    }
+
+    .home-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 1.4rem;
+    }
+
+    .hero-image {
+        width: 100%;
+        height: 320px;
+        object-fit: cover;
+        object-position: center;
+        background: #ffffff;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+    }
+
+    .icon-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem;
+        height: 100%;
+        text-align: center;
+    }
+
+    .icon-badge {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: var(--bg-main);
+        color: var(--primary);
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.45rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .icon-card p {
+        color: var(--text-muted);
+        margin-bottom: 0;
+        font-size: 0.92rem;
+    }
+
+    .gallery-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .gallery-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .gallery-link {
+        text-decoration: none !important;
+        color: inherit !important;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .gallery-image {
+        width: 100%;
+        height: 190px;
+        object-fit: contain;
+        object-position: center;
+        background: #ffffff;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.65rem;
+    }
+
+    .gallery-caption {
+        background: var(--surface);
+        padding: 0.9rem;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 80px;
+    }
+
+    .gallery-caption strong {
+        display: block;
+        line-height: 1.25;
+        margin-bottom: 0.2rem;
+    }
+
+    .quick-strip {
+        border: 1px dashed var(--border);
+        background: var(--surface);
+        border-radius: 8px;
+        padding: 0.9rem 1rem;
+    }
+
+    .quick-strip p {
+        margin-bottom: 0;
+        color: var(--text-muted);
+        font-size: 0.92rem;
+    }
+</style>
+
+<div class="home-stack mt-3">
+<section class="hero-panel">
+    <div class="row g-4 align-items-center">
+        <div class="col-lg-6">
+            <h1 class="section-title mb-2">Welcome to Kizuna Collections</h1>
+            <p class="section-subtitle mb-3">Cute finds, collectible picks, and fun merch for every fan.</p>
+            <div class="d-flex gap-3 flex-wrap">
+                <a href="{{ base_url }}/products?admin={{ is_admin }}&user_id={{ user_id }}" class="btn btn-main px-4">Shop Now</a>
+                <a href="{{ base_url }}/contactus?admin={{ is_admin }}&user_id={{ user_id }}" class="btn btn-outline-main px-4">Message Us</a>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <img class="hero-image" src="{{ base_url }}/static/img/bg3.jpg" alt="Kizuna Collections featured image" decoding="async" fetchpriority="high">
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="icon-card">
+                <div class="icon-badge">⭐</div>
+                <h5 class="fw-bold mb-1">Top Picks</h5>
+                <p>Handpicked items fans actually love.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="icon-card">
+                <div class="icon-badge">🎁</div>
+                <h5 class="fw-bold mb-1">Gift-Ready</h5>
+                <p>Great choices for birthdays and surprises.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="icon-card">
+                <div class="icon-badge">🚚</div>
+                <h5 class="fw-bold mb-1">Fast Support</h5>
+                <p>Quick replies when you need help picking.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="gallery-card">
+                <a href="{{ base_url }}/products?category=Figurines&admin={{ is_admin }}&user_id={{ user_id }}" class="gallery-link">
+                    <img class="gallery-image" src="{{ base_url }}/static/img/products/chopper.jpg" alt="Chopper Figure" loading="lazy" decoding="async">
+                    <div class="gallery-caption">
+                        <strong>Chopper Figure</strong>
+                        <p class="small text-muted mb-0">Figure Collection</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="gallery-card">
+                <a href="{{ base_url }}/products?category=Plushies&admin={{ is_admin }}&user_id={{ user_id }}" class="gallery-link">
+                    <img class="gallery-image" src="{{ base_url }}/static/img/products/kuromi.jpg" alt="Kuromi Pastel Plush" loading="lazy" decoding="async">
+                    <div class="gallery-caption">
+                        <strong>Kuromi Pastel Plush</strong>
+                        <p class="small text-muted mb-0">Plush Zone</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="gallery-card">
+                <a href="{{ base_url }}/products?category=Keychains&admin={{ is_admin }}&user_id={{ user_id }}" class="gallery-link">
+                    <img class="gallery-image" src="{{ base_url }}/static/img/products/mymelody.jpg" alt="My Melody Keychain" loading="lazy" decoding="async">
+                    <div class="gallery-caption">
+                        <strong>My Melody Keychain</strong>
+                        <p class="small text-muted mb-0">Keychain Aesthetic</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="quick-strip text-center">
+        <p><strong>Today:</strong> Free local shipping for orders over PHP 2,500 • Friendly product recommendations available in Contact page</p>
+    </div>
+</section>
+</div>
+{% endblock %}

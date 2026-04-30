@@ -1,0 +1,57 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<div class="page-panel bg-white mx-auto mt-4" style="max-width: 560px;">
+    <div class="page-panel-header">
+        Add Product
+    </div>
+    <div class="page-panel-body">
+        <h2 class="section-title h4">New Inventory Item</h2>
+        <p class="section-subtitle">Fill in the product information for your store catalog.</p>
+        <form action="/add_product" method="POST">
+            <input type="hidden" name="admin" value="{{ 'True' if is_admin else 'False' }}">
+            <input type="hidden" name="user_id" value="{{ user_id }}">
+
+            <div class="mb-3 text-start">
+                <label class="fw-bold">Product Name</label>
+                <input type="text" name="name" class="form-control" placeholder="e.g. Figure Model A" required>
+            </div>
+
+            <div class="mb-3 text-start">
+                <label class="fw-bold">Brand Name</label>
+                <input type="text" name="brand" class="form-control" placeholder="e.g. Bandai" required>
+            </div>
+            
+            <div class="mb-3 text-start">
+                <label class="fw-bold">Category</label>
+                <select name="category" class="form-select" required>
+                    <option value="" disabled selected>Select Category</option>
+                    <option value="Keychains">Keychains</option>
+                    <option value="Figurines">Figurines</option>
+                    <option value="Plushies">Plushies</option>
+                </select>
+            </div>
+
+            <div class="mb-3 text-start">
+                <label class="fw-bold">Image Filename</label>
+                <input type="text" name="image" class="form-control" placeholder="kirby_keychain.png" required>
+                <small class="text-muted">Must be in static/img/products/</small>
+            </div>
+
+            <div class="row">
+                <div class="col-6 mb-3 text-start">
+                    <label class="fw-bold">Price</label>
+                    <input type="number" step="0.01" name="price" class="form-control" placeholder="0.00" required>
+                </div>
+                <div class="col-6 mb-3 text-start">
+                    <label class="fw-bold">Stock</label>
+                    <input type="number" name="stock" class="form-control" placeholder="0" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-main w-100 fw-bold mt-3">
+                Add to Inventory
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

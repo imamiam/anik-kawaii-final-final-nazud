@@ -1,0 +1,4881 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+<style>
+  .navbar,
+  footer,
+  .site-footer {
+    display: none !important;
+  }
+
+  main.container.content-wrap.py-4.py-lg-5,
+  main.content-wrap,
+  .content-wrap {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body {
+    background: #f3f0fa;
+  }
+
+  .admin-app {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "sidebar topbar"
+      "sidebar stats"
+      "sidebar body";
+    gap: 0;
+    background: #f3f0fa;
+  }
+
+  .admin-sidebar {
+    grid-area: sidebar;
+    background: linear-gradient(180deg, #6a4caf 0%, #4f3787 100%);
+    color: #fff;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .admin-brand {
+    padding: 0.85rem 0.95rem 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .admin-brand h2 {
+    margin: 0;
+    font-family: "Allura", cursive;
+    font-size: 2.35rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    line-height: 0.95;
+    color: #ffffff;
+  }
+
+  .admin-brand p {
+    margin: 0.12rem 0 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #ede9fe;
+    opacity: 1;
+  }
+
+  .admin-nav {
+    padding: 0.75rem 0.55rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .admin-nav-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    opacity: 0.55;
+    margin: 0;
+    padding: 0 0.45rem;
+  }
+
+  .admin-nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .admin-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.92rem;
+    font-weight: 500;
+    padding: 0.55rem 0.6rem;
+    border-radius: 8px;
+  }
+
+  .admin-nav-link:hover,
+  .admin-nav-link.active {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+  }
+
+  .nav-glyph {
+    width: 0.92rem;
+    height: 0.92rem;
+    background: currentColor;
+    opacity: 0.92;
+    flex-shrink: 0;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+  }
+
+  .icon-dashboard { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M1 1h6v6H1zm8 0h6v3H9zM9 6h6v1H9zM1 9h3v6H1zm5 0h9v6H6z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M1 1h6v6H1zm8 0h6v3H9zM9 6h6v1H9zM1 9h3v6H1zm5 0h9v6H6z'/%3E%3C/svg%3E"); }
+  .icon-pos { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M1 2h2l1.2 6.2A2 2 0 0 0 6.2 10H12a2 2 0 0 0 1.9-1.4L15 4H4.3L4 2.5A1 1 0 0 0 3 2H1zm5 10a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm6 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M1 2h2l1.2 6.2A2 2 0 0 0 6.2 10H12a2 2 0 0 0 1.9-1.4L15 4H4.3L4 2.5A1 1 0 0 0 3 2H1zm5 10a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm6 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z'/%3E%3C/svg%3E"); }
+  .icon-products { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M8 1 1.5 4.4v7.2L8 15l6.5-3.4V4.4zM8 2.9l4.5 2.4L8 7.6 3.5 5.3zm-5 3.6 4.2 2.2v4.2L3 10.7zm10 0v4.2l-4.2 2.2V8.7z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M8 1 1.5 4.4v7.2L8 15l6.5-3.4V4.4zM8 2.9l4.5 2.4L8 7.6 3.5 5.3zm-5 3.6 4.2 2.2v4.2L3 10.7zm10 0v4.2l-4.2 2.2V8.7z'/%3E%3C/svg%3E"); }
+  .icon-stock { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M2 5h9l-2-2 1.4-1.4L15.8 7l-5.4 5.4L9 11l2-2H2zm12 6H5l2 2-1.4 1.4L.2 9l5.4-5.4L7 5l-2 2h9z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M2 5h9l-2-2 1.4-1.4L15.8 7l-5.4 5.4L9 11l2-2H2zm12 6H5l2 2-1.4 1.4L.2 9l5.4-5.4L7 5l-2 2h9z'/%3E%3C/svg%3E"); }
+  .icon-purchase { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M1 3h8v6H1zm9 2h2.5L15 7.5V11h-1a2 2 0 1 1-4 0H6a2 2 0 1 1-4 0H1v-1h8zM4 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm8 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M1 3h8v6H1zm9 2h2.5L15 7.5V11h-1a2 2 0 1 1-4 0H6a2 2 0 1 1-4 0H1v-1h8zM4 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm8 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E"); }
+  .icon-sales { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M3 1h8v2h2v12H3zM4 4v10h8V4zm1 2h6v1H5zm0 3h6v1H5z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M3 1h8v2h2v12H3zM4 4v10h8V4zm1 2h6v1H5zm0 3h6v1H5z'/%3E%3C/svg%3E"); }
+  .icon-top { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M8 1 9.8 4.6l4 .6-2.9 2.8.7 4L8 10.1 4.4 12l.7-4L2.2 5.2l4-.6zM1 13h14v2H1z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M8 1 9.8 4.6l4 .6-2.9 2.8.7 4L8 10.1 4.4 12l.7-4L2.2 5.2l4-.6zM1 13h14v2H1z'/%3E%3C/svg%3E"); }
+  .icon-customers { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M6 7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm5 1a2 2 0 1 1 0-4 2 2 0 0 1 0 4zM1 14c0-2.1 2.2-4 5-4s5 1.9 5 4H1zm9 .1c.2-1.2.9-2.2 1.9-2.9.7-.5 1.5-.9 2.1-1 .7.8 1 1.8 1 3z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M6 7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm5 1a2 2 0 1 1 0-4 2 2 0 0 1 0 4zM1 14c0-2.1 2.2-4 5-4s5 1.9 5 4H1zm9 .1c.2-1.2.9-2.2 1.9-2.9.7-.5 1.5-.9 2.1-1 .7.8 1 1.8 1 3z'/%3E%3C/svg%3E"); }
+
+  .admin-sidebar-footer {
+    margin-top: auto;
+    padding: 0.7rem 0.65rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.13);
+  }
+
+  .admin-user-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    background: rgba(0, 0, 0, 0.14);
+    border-radius: 10px;
+    padding: 0.45rem 0.55rem;
+    color: #fff;
+    margin-bottom: 0.4rem;
+  }
+
+  .admin-user-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.23);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .admin-logout {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: auto;
+    gap: 0.4rem;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    border-radius: 8px;
+    padding: 0.4rem 0.55rem;
+    transition: background .2s ease, color .2s ease, border-color .2s ease;
+    border: 1px solid transparent;
+  }
+
+  .admin-logout:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .admin-logout-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+    display: inline-block;
+    background: currentColor;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M6 1h7v14H6v-2h5V3H6zm-1 3 1.4 1.4L4.8 7H10v2H4.8l1.6 1.6L5 12 1 8z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M6 1h7v14H6v-2h5V3H6zm-1 3 1.4 1.4L4.8 7H10v2H4.8l1.6 1.6L5 12 1 8z'/%3E%3C/svg%3E");
+  }
+
+  .admin-status {
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    margin-top: 0.2rem;
+    padding-top: 0.35rem;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.46);
+    font-weight: 600;
+  }
+
+  .admin-topbar {
+    grid-area: topbar;
+    align-self: start;
+    border: 1px solid #d7dbe0;
+    background: #f2f3f5;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0.9rem; 
+  }
+
+  .admin-topbar h6 {
+    padding: 0 0.80rem;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1; 
+    color: var(--text-main);
+  }
+
+  .admin-topbar-icon-box {
+    width: 2.3rem;
+    height: 2.3rem;
+    border-radius: 11px;
+    background: #ece8f6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  #adminTopbarIcon {
+    width: 1.05rem;
+    height: 1.05rem;
+    color: #6a4caf;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  .admin-topbar-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem; 
+    margin-right: 0.90rem;
+    color: #64748b;
+    font-size: 0.8rem;
+    line-height: 1;
+  }
+
+  .online-pill {
+    background: transparent;
+    color: #334155;
+    border-radius: 0;
+    padding: 0;
+    font-size: 0.82rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    line-height: 1;
+  }
+
+  .online-pill::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #22c55e;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  .admin-stats {
+    grid-area: stats;
+    align-self: start;
+    margin: 0;
+    --bs-gutter-x: 0.90rem;
+    --bs-gutter-y: 0;
+    padding: 1.5rem 1.5rem 0.25rem;
+  }
+
+  .stat-card {
+    border: 0;
+    border-radius: 12px;
+    min-height: 106px;
+    padding: 0.85rem 0.95rem;
+  }
+
+
+  .stat-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #fff !important;
+    opacity: 0.95;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    line-height: 1.05;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .stat-sub {
+    font-size: 0.88rem;
+    color: #fff !important;
+    opacity: 0.95;
+  }
+
+  .admin-body {
+    grid-area: body;
+    /* vertical breathing room for every admin page section; keep side gutter */
+    padding: 1.5rem 1.5rem;
+  }
+
+  .admin-panel[hidden] {
+    display: none !important;
+  }
+
+  .dashboard-grid {
+    --bs-gutter-x: 0.75rem;
+    --bs-gutter-y: 0.35rem;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .dashboard-card {
+    border: 0;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .dashboard-card .card-header {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    padding: 0.50rem 0.8rem;
+    font-size: 0.98rem;
+  }
+
+  .dashboard-card .table {
+    margin-bottom: 0;
+    font-size: 0.96rem;
+  }
+
+  .dashboard-card .table th,
+  .dashboard-card .table td {
+    padding-top: 0.50rem;
+    padding-bottom: 0.45rem;
+  }
+
+  .admin-main-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .admin-main-panel__head {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: #fafafa;
+  }
+
+  .admin-main-panel__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .admin-main-panel__meta {
+    margin: 0.2rem 0 0;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .admin-table {
+    margin-bottom: 0;
+    font-size: 0.9rem;
+  }
+
+  .admin-table thead th {
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: #f9fafb;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pos-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr);
+    gap: 0.75rem;
+    /* Same horizontal inset as stat cards + dashboard tables: .admin-body left/right + gap only */
+    padding: 0;
+    background: transparent;
+    align-items: stretch;
+  }
+
+  .pos-catalog,
+  .pos-cart {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .pos-catalog {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pos-catalog-head {
+    padding: 0.65rem;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 0.5rem;
+  }
+
+  #posCategoryFilter {
+    height: 38px;
+    min-height: 38px;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    padding-top: 0.42rem;
+    padding-bottom: 0.42rem;
+  }
+
+  .pos-search-wrap {
+    position: relative;
+  }
+
+  .pos-search-wrap input {
+    padding-left: 2.65rem;
+  }
+
+  .pos-search-wrap::before {
+    content: "";
+    position: absolute;
+    left: 0.82rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='11' cy='11' r='7' stroke='%23334155' stroke-width='2'/%3E%3Cpath d='M20 20l-4.2-4.2' stroke='%23334155' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    opacity: 0.9;
+    pointer-events: none;
+  }
+
+  .pos-search-wrap::after {
+    content: "";
+    position: absolute;
+    left: 2.15rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 56%;
+    background: #e5e7eb;
+    pointer-events: none;
+  }
+
+  .pos-product-grid {
+    padding: 0.8rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.6rem;
+    height: 600px;
+    min-height: 560px;
+    align-content: start;
+    flex: 1 1 auto;
+  }
+
+  .pos-product-btn {
+    width: 100%;
+    border: 1px solid #e8ebf2;
+    border-radius: 10px;
+    background: #fff;
+    text-align: left;
+    padding: 0.65rem 0.7rem 0.75rem;
+    transition: box-shadow 0.2s ease, transform 0.08s ease;
+  }
+
+  .pos-product-btn:hover {
+    box-shadow: 0 3px 10px rgba(27, 32, 50, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .pos-product-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .pos-product-name {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1f2940;
+    margin-bottom: 0.25rem;
+  }
+
+  .pos-product-price {
+    display: block;
+    color: #5b47da;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.35rem;
+  }
+
+  .pos-product-stock {
+    display: block;
+    font-size: 0.82rem;
+    color: #14b87a;
+    font-weight: 500;
+  }
+
+  .pos-product-thumb-wrap {
+    height: 84px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 0.35rem;
+    overflow: hidden;
+  }
+
+  .pos-product-thumb {
+    max-width: 84px;
+    max-height: 86px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    transform: scale(1.08);
+    transform-origin: center;
+  }
+
+  .pos-catalog-footer {
+    border-top: 1px solid #eef2f7;
+    padding: 0.75rem 0.9rem 0.8rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .pos-pagination {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .pos-page-arrow,
+  .pos-page-num {
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    border: 1px solid #eceff5;
+    background: #ffffff;
+    color: #8d97ab;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .pos-page-arrow[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .pos-page-num {
+    border-color: transparent;
+    color: #667085;
+    font-weight: 600;
+  }
+
+  .pos-page-num.is-active {
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #6f53d8 0%, #5a3fba 100%);
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 8px 16px rgba(90, 63, 186, 0.28);
+  }
+
+  .pos-page-arrow:not([disabled]):hover,
+  .pos-page-num:not(.is-active):hover {
+    background: #f4f1ff;
+    border-color: #e2dbfb;
+    color: #5f45c9;
+  }
+
+  .pos-cart-head {
+    padding: 0.65rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+    font-weight: 800;
+    color: #273046;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .pos-cart-head-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .pos-cart-head-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: #f3efff;
+    color: #6a4caf;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+  }
+
+  .pos-cart-count {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #6a4caf;
+    background: #f1edff;
+    border-radius: 999px;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .pos-cart-items {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding: 0 0.8rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pos-cart-item {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr) auto;
+    gap: 0.7rem;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #eef2f7;
+  }
+
+  .pos-cart-item:last-child {
+    border-bottom: 0;
+  }
+
+  .pos-cart-item-thumb {
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    background: #f5f7fb;
+    object-fit: cover;
+  }
+
+  .pos-cart-item-name {
+    font-weight: 700;
+    color: #1f2940;
+    font-size: 0.92rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .pos-cart-item-price {
+    color: #5b47da;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .pos-cart-item-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+  }
+
+  .pos-qty-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .pos-qty-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid #dfd8f7;
+    background: #f5f1ff;
+    color: #6a4caf;
+    font-weight: 900;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .pos-qty-value {
+    min-width: 16px;
+    text-align: center;
+    font-weight: 700;
+    color: #273046;
+  }
+
+  .pos-cart-item-total {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #273046;
+  }
+
+  .pos-remove-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid #ffd7e1;
+    background: #fff1f5;
+    color: #e11d48;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .pos-cart {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+
+  .pos-cart > .pos-empty {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .pos-empty {
+    min-height: 190px;
+    display: grid;
+    place-items: center;
+    color: #6b7280;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pos-empty-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+    display: block;
+    margin-bottom: 0.3rem;
+    opacity: 0.75;
+  }
+
+  .pos-summary {
+    padding: 0.7rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pos-summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    margin-bottom: 0.15rem;
+    color: #4b5563;
+  }
+
+  .pos-summary-total {
+    margin-top: 0.45rem;
+    padding-top: 0.45rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: #6a4caf;
+  }
+
+  .pos-checkout {
+    padding: 0.75rem 0.8rem;
+  }
+
+  .pos-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .pos-checkout label {
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #4b5563;
+    margin-bottom: 0.2rem;
+  }
+
+  .pos-checkout .btn {
+    margin-top: 0.35rem;
+  }
+
+  .pos-checkout .btn-success {
+    background: #dcfce7;
+    border-color: #bbf7d0;
+    color: #166534;
+    font-weight: 700;
+    min-height: 42px;
+  }
+
+  .pos-checkout .btn-success:hover,
+  .pos-checkout .btn-success:focus-visible {
+    background: #bbf7d0;
+    border-color: #86efac;
+    color: #14532d;
+  }
+
+  .pos-cart .btn-outline-secondary:hover,
+  .pos-cart .btn-outline-secondary:focus-visible {
+    background: #f3edff;
+    border-color: #c7b8ef;
+    color: #5f3faa;
+  }
+
+  .pos-sale-complete-card {
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+
+  .pos-sale-complete-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: #22c55e;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .pos-sale-complete-title {
+    color: #15803d;
+    font-weight: 700;
+  }
+
+  .pos-receipt-box {
+    border: 2px dashed var(--border);
+    border-radius: 0.65rem;
+    padding: 0.85rem 1rem;
+    background: #fafafa;
+    font-family: ui-monospace, "Cascadia Code", "Roboto Mono", Menlo, Consolas, monospace;
+    font-size: 0.82rem;
+    color: #1f2937;
+  }
+
+  .pos-receipt-hr {
+    border: 0;
+    border-top: 1px solid #d1d5db;
+    opacity: 1;
+  }
+
+  .pos-receipt-lines .pos-receipt-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .pos-receipt-lines .pos-receipt-line:last-child {
+    margin-bottom: 0;
+  }
+
+  .pos-receipt-change {
+    color: #15803d;
+  }
+
+  .pos-new-tx-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    font-weight: 700;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .products-panel-shell {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .products-toolbar {
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 170px auto;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .products-search-wrap {
+    position: relative;
+  }
+
+  .products-search-wrap::before {
+    content: "⌕";
+    position: absolute;
+    left: 0.65rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 0.86rem;
+    pointer-events: none;
+  }
+
+  .products-search-wrap input {
+    padding-left: 1.85rem;
+  }
+
+  .products-table {
+    margin-bottom: 0;
+    font-size: 0.96rem;
+  }
+
+  .products-table thead th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    color: #111827;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0.6rem 0.75rem;
+    font-weight: 700;
+  }
+
+  .products-table tbody td {
+    padding: 0.58rem 0.75rem;
+    vertical-align: middle;
+    border-color: #eef2f7;
+  }
+
+  .products-table-footer {
+    padding: 0.5rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #64748b;
+  }
+
+  .products-results-text {
+    font-weight: 700;
+    font-size: 0.82rem;
+  }
+
+  .products-pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .products-page-arrow {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: 1px solid #ddd7ee;
+    background: #e9e4f3;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 1rem;
+    padding: 0;
+  }
+
+  .products-page-arrow[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .products-page-num {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    background: #ffffff;
+    color: #6a4caf;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 1rem;
+    padding: 0;
+  }
+
+  .products-page-num.is-active {
+    background: linear-gradient(135deg, #7c5ac8 0%, #5f3faa 100%);
+    border-color: #5f3faa;
+    color: #ffffff;
+  }
+
+  .products-page-arrow:not([disabled]):hover,
+  .products-page-num:not(.is-active):hover {
+    background: #f5f3ff;
+    border-color: #d7ccfa;
+    color: #5f3faa;
+  }
+
+  /* Center columns: SKU, Category, Price, Stock, Status */
+  .products-table thead th:nth-child(3),
+  .products-table thead th:nth-child(4),
+  .products-table thead th:nth-child(5),
+  .products-table thead th:nth-child(6),
+  .products-table thead th:nth-child(7),
+  .products-table tbody td:nth-child(3),
+  .products-table tbody td:nth-child(4),
+  .products-table tbody td:nth-child(5),
+  .products-table tbody td:nth-child(6),
+  .products-table tbody td:nth-child(7) {
+    text-align: center !important;
+  }
+
+  .products-id {
+    color: #6b7280;
+    min-width: 52px;
+  }
+
+  .products-name-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .products-thumb {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: #f3f4f6;
+    flex-shrink: 0;
+  }
+
+  .products-name {
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.15;
+  }
+
+  .products-code {
+    font-size: 0.76rem;
+    color: #9ca3af;
+    margin-top: 0.12rem;
+  }
+
+  .products-sku {
+    color: #ec4899;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .products-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #0f172a;
+    font-weight: 700;
+  }
+
+  .products-cat-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: #6a4caf;
+  }
+
+  .status-pill--active {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #22c55e;
+    flex-shrink: 0;
+  }
+
+  .products-action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #eef2f7;
+    background: #f3f4f6;
+    color: #6a4caf;
+    padding: 0;
+  }
+
+  .products-action-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .products-edit-btn {
+    background: rgba(124, 90, 200, 0.12);
+    border-color: rgba(124, 90, 200, 0.18);
+    color: #6a4caf;
+  }
+
+  .products-delete-btn {
+    background: rgba(225, 29, 72, 0.08);
+    border-color: rgba(225, 29, 72, 0.16);
+    color: #e11d48;
+  }
+
+  .stock-pill,
+  .status-pill,
+  .po-status-pill,
+  .sales-status-text {
+    display: inline-block;
+    box-sizing: border-box;
+    padding: 0.16rem 0.46rem;
+    border-radius: 6px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .stock-pill.ok { background: #dcfce7; color: #166534; }
+  /* keep yellow "light" (pastel), not strong amber */
+  .stock-pill.low { background: #fef3c7; color: #92400e; }
+  .stock-pill.out { background: #ffe4e6; color: #be123c; }
+  .status-pill { background: #dbeafe; color: #1d4ed8; }
+
+  .btn-adjust {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    height: 30px;
+    border: 1px solid #8b7cff;
+    color: #6b4dff;
+    background: #f3efff;
+    border-radius: 10px;
+    padding: 0 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    line-height: 1;
+  }
+
+  .btn-adjust:hover {
+    background: #ddd2ff;
+    color: #5a3ff1;
+    border-color: #7d69f8;
+  }
+
+  .btn-adjust:focus-visible {
+    background: #ddd2ff;
+    color: #5a3ff1;
+    border-color: #7d69f8;
+    box-shadow: 0 0 0 .15rem rgba(122, 92, 255, .2);
+  }
+
+  .stock-toolbar {
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 140px;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .stock-search-wrap {
+    position: relative;
+  }
+
+  .stock-search-wrap::before {
+    content: "🔍";
+    position: absolute;
+    left: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .stock-search-wrap input {
+    padding-left: 1.85rem;
+  }
+
+  .stock-table {
+    margin-bottom: 0;
+    font-size: 0.95rem;
+  }
+
+  .stock-table thead th {
+    background: #fff;
+    color: #111827;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0.58rem 0.72rem;
+  }
+
+  .stock-table tbody td {
+    padding: 0.62rem 0.72rem;
+    border-color: #edf1f7;
+    vertical-align: middle;
+  }
+
+  /* Stock movements (screenshot-style) */
+  .stock-panel-shell {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 1rem 1.05rem 1.05rem;
+  }
+
+  .stock-panel-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .stock-search-wrap--wide {
+    flex: 1 1 auto;
+  }
+
+  .stock-type-filter {
+    width: 180px;
+    height: 38px;
+    min-height: 38px;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    padding-top: 0.42rem;
+    padding-bottom: 0.42rem;
+  }
+
+  /* Stock panel uses icon-only search field (no inner divider line). */
+  .stock-search-wrap::after {
+    display: none;
+  }
+
+  .stock-table-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .stock-mv-table thead th {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 900;
+    padding: 1.05rem 0.75rem;
+    background: #fff;
+    border-bottom: 1px solid #eef2f7;
+  }
+
+  .stock-th-left {
+    text-align: left;
+    padding-left: 1.25rem !important;
+  }
+
+  .stock-th-end {
+    text-align: right;
+    padding-right: 1.25rem !important;
+  }
+
+  .stock-th-center {
+    text-align: center;
+  }
+
+  .stock-td-center {
+    text-align: center;
+  }
+
+  .stock-mv-table tbody td {
+    padding: 1.05rem 0.75rem;
+    border-top: 1px solid #eef2f7;
+    vertical-align: middle;
+    background: #fff;
+  }
+
+  .stock-mv-table tbody tr:first-child td {
+    border-top: 0;
+  }
+
+  .stock-mv-type-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 0.72rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .stock-mv-type-in {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid rgba(22, 101, 52, 0.14);
+  }
+
+  .stock-mv-type-out {
+    background: #ffe4e6;
+    color: #be123c;
+    border: 1px solid rgba(190, 18, 60, 0.14);
+  }
+
+  .stock-mv-type-restock {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border: 1px solid rgba(29, 78, 216, 0.14);
+  }
+
+  .stock-mv-type-deduct {
+    background: #ede9fe;
+    color: #6d28d9;
+    border: 1px solid rgba(109, 40, 217, 0.14);
+  }
+
+  .stock-desc-cell .stock-desc-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    background: rgba(124, 90, 200, 0.12);
+    color: #6a4caf;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .stock-desc-cell .stock-desc-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .stock-desc-title {
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .stock-desc-sub {
+    margin-top: 2px;
+    color: #64748b;
+    font-weight: 600;
+  }
+
+  .stock-qty-pill {
+    min-width: 44px;
+    height: 34px;
+    border-radius: 12px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(124, 90, 200, 0.12);
+    color: #6a4caf;
+    font-weight: 900;
+  }
+
+  .stock-cashier-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #0f172a;
+    font-weight: 900;
+  }
+
+  .stock-cashier-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 12px;
+    background: #f3f4f6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #6a4caf;
+    flex-shrink: 0;
+  }
+  .stock-cashier-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .stock-datetime-cell .stock-date {
+    font-weight: 900;
+    color: #0f172a;
+  }
+  .stock-datetime-cell .stock-time {
+    color: #64748b;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  .stock-table-footer {
+    padding: 0.5rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #64748b;
+  }
+
+  .stock-results-text {
+    font-weight: 700;
+    font-size: 0.82rem;
+  }
+
+  .stock-pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .stock-page-arrow {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: 1px solid #ddd7ee;
+    background: #e9e4f3;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 1rem;
+    padding: 0;
+  }
+
+  .stock-page-arrow[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .stock-page-num {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    background: #ffffff;
+    color: #6a4caf;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 1rem;
+    padding: 0;
+  }
+
+  .stock-page-num.is-active {
+    background: linear-gradient(135deg, #7c5ac8 0%, #5f3faa 100%);
+    border-color: #5f3faa;
+    color: #ffffff;
+  }
+
+  .stock-page-arrow:not([disabled]):hover,
+  .stock-page-num:not(.is-active):hover {
+    background: #f5f3ff;
+    border-color: #d7ccfa;
+    color: #5f3faa;
+  }
+
+  .purchase-panel-shell {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .purchase-toolbar {
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .purchase-search-wrap {
+    position: relative;
+  }
+
+  .purchase-search-wrap::before {
+    content: "🔍";
+    position: absolute;
+    left: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.6;
+    font-size: 0.8rem;
+    pointer-events: none;
+  }
+
+  .purchase-search-wrap input {
+    padding-left: 1.85rem;
+  }
+
+  /* Purchase Orders (screenshot-style) */
+  .purchase-panel-shell {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 1rem 1.05rem 1.05rem;
+  }
+
+  .purchase-panel-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .purchase-search-wrap--wide {
+    flex: 1 1 auto;
+  }
+
+  .purchase-new-order-btn {
+    background: #6a4caf !important;
+    border-color: #6a4caf !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+    border-radius: 10px;
+    height: 38px;
+    min-height: 38px;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    padding-left: 1.05rem;
+    padding-right: 1.05rem;
+  }
+
+  .purchase-table-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .purchase-table {
+    margin-bottom: 0;
+  }
+
+  .purchase-th-left {
+    text-align: left;
+    padding-left: 1.25rem !important;
+  }
+
+  .purchase-th-end {
+    text-align: right;
+    padding-right: 1.25rem !important;
+  }
+
+  .purchase-td-end {
+    text-align: right;
+    padding-right: 1.25rem !important;
+    white-space: nowrap;
+  }
+
+  .purchase-table thead th {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 900;
+    padding: 1.05rem 0.75rem;
+    background: #fff;
+    border-bottom: 1px solid #eef2f7;
+  }
+
+  .purchase-table tbody td {
+    padding: 1.05rem 0.75rem;
+    border-top: 1px solid #eef2f7;
+    vertical-align: middle;
+    background: #fff;
+  }
+
+  .purchase-table tbody tr:first-child td {
+    border-top: 0;
+  }
+
+  .po-status-pill {
+    font-weight: 800;
+  }
+
+  .po-status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .po-status-icon svg {
+    width: 14px;
+    height: 14px;
+    display: block;
+  }
+
+  .purchase-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .purchase-action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    background: #f3f4f6;
+    color: #6b7280;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .purchase-table-footer {
+    padding: 0.5rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #64748b;
+  }
+
+  .purchase-results-text {
+    font-weight: 700;
+    font-size: 0.82rem;
+  }
+
+  .purchase-pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .purchase-page-arrow {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: 1px solid #ddd7ee;
+    background: #e9e4f3;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 1rem;
+    padding: 0;
+  }
+
+  .purchase-page-arrow[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .purchase-page-num {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    background: #ffffff;
+    color: #6a4caf;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 1rem;
+    padding: 0;
+  }
+
+  .purchase-page-num.is-active {
+    background: linear-gradient(135deg, #7c5ac8 0%, #5f3faa 100%);
+    border-color: #5f3faa;
+    color: #ffffff;
+  }
+
+  .purchase-page-arrow:not([disabled]):hover,
+  .purchase-page-num:not(.is-active):hover {
+    background: #f5f3ff;
+    border-color: #d7ccfa;
+    color: #5f3faa;
+  }
+
+  .purchase-table {
+    margin-bottom: 0;
+    font-size: 0.95rem;
+  }
+
+  .purchase-table thead th {
+    background: #fff;
+    color: #111827;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0.58rem 0.72rem;
+  }
+
+  .purchase-table tbody td {
+    padding: 0.62rem 0.72rem;
+    border-color: #edf1f7;
+    vertical-align: middle;
+  }
+
+  .btn-po-create {
+    background: #6a4caf;
+    border-color: #6a4caf;
+    color: #fff;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 0.5rem 0.95rem;
+  }
+
+  .btn-po-create:hover,
+  .btn-po-create:focus-visible {
+    background: #5a3f9e;
+    border-color: #5a3f9e;
+    color: #fff;
+  }
+
+  .purchase-modal .modal-dialog {
+    max-width: 980px;
+  }
+
+  .purchase-modal .modal-header,
+  .purchase-modal .modal-footer {
+    padding: 0.9rem 1rem;
+  }
+
+  .purchase-modal .modal-body {
+    padding: 1rem;
+  }
+
+  .po-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .po-item-head,
+  .po-item-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) 0.65fr 0.65fr 0.95fr 44px;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .po-item-head {
+    margin-top: 0.75rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #374151;
+  }
+
+  .po-item-row + .po-item-row {
+    margin-top: 0.45rem;
+  }
+
+  .po-remove-item {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid #f3b2bc;
+    background: #fff;
+    color: #e11d48;
+    line-height: 1;
+  }
+
+  .po-grand-total {
+    margin-top: 0.9rem;
+    border: 1px solid #ebeef4;
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    font-weight: 700;
+  }
+
+  .po-grand-total-label {
+    color: #6b7280;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    letter-spacing: .02em;
+  }
+
+  @media (max-width: 991.98px) {
+    .po-grid-2 {
+      grid-template-columns: 1fr;
+    }
+
+    .po-item-head,
+    .po-item-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .po-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.1;
+    padding: 0.16rem 0.46rem;
+    text-transform: none;
+    gap: 0.45rem;
+  }
+
+  /* Pastel boxed badges (matching Products stock/status) */
+  .po-status-pending {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid rgba(146, 64, 14, 0.18);
+  }
+  .po-status-received {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid rgba(22, 101, 52, 0.18);
+  }
+  .po-status-cancelled {
+    background: #ffe4e6;
+    color: #be123c;
+    border: 1px solid rgba(190, 18, 60, 0.18);
+  }
+
+  .sales-status-text {
+    font-weight: 700;
+    text-transform: lowercase;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.16rem 0.46rem;
+    border-radius: 6px;
+    font-size: 0.74rem;
+    line-height: 1.1;
+    border: 1px solid transparent;
+  }
+
+  .sales-status-placed {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: rgba(146, 64, 14, 0.18);
+  }
+
+  .sales-status-processing {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-color: rgba(29, 78, 216, 0.18);
+  }
+
+  .sales-status-delivered {
+    background: #dcfce7;
+    color: #166534;
+    border-color: rgba(22, 101, 52, 0.18);
+  }
+
+  .sales-status-cancelled {
+    background: #ffe4e6;
+    color: #be123c;
+    border-color: rgba(190, 18, 60, 0.18);
+  }
+
+  .sales-toolbar {
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 180px;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .sales-search-wrap {
+    position: relative;
+  }
+
+  .sales-search-wrap::before {
+    content: "⌕";
+    position: absolute;
+    left: 0.65rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 0.86rem;
+    pointer-events: none;
+  }
+
+  .sales-search-wrap input {
+    padding-left: 1.85rem;
+  }
+
+  /* Sales Orders (screenshot-style) */
+  .sales-panel-shell {
+    padding: 1rem 1.05rem 1.05rem;
+  }
+
+  .sales-panel-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .sales-search-wrap--wide {
+    flex: 1 1 auto;
+  }
+
+  .sales-status-filter {
+    width: 170px;
+    height: 38px;
+    min-height: 38px;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    padding-top: 0.42rem;
+    padding-bottom: 0.42rem;
+  }
+
+  .sales-new-order-btn {
+    flex: 0 0 auto;
+    height: 38px;
+    min-height: 38px;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    padding-left: 1.05rem;
+    padding-right: 1.05rem;
+    background: #6a4caf !important;
+    border-color: #6a4caf !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+    border-radius: 10px;
+  }
+
+  .sales-table-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .sales-th-left {
+    text-align: left;
+    padding-left: 1.25rem !important;
+  }
+
+  .sales-th-end {
+    text-align: right;
+    padding-right: 1.25rem !important;
+  }
+
+  .sales-td-end {
+    text-align: right;
+    padding-right: 1.25rem !important;
+  }
+
+  .sales-th-end {
+    text-align: right;
+    padding-right: 1.25rem !important;
+  }
+
+  .sales-table thead th {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 900;
+    padding: 1.05rem 0.75rem;
+    background: #fff;
+    border-bottom: 1px solid #eef2f7;
+  }
+
+  .sales-table tbody td {
+    padding: 1.05rem 0.75rem;
+    border-top: 1px solid #eef2f7;
+    vertical-align: middle;
+    background: #fff;
+  }
+
+  .sales-table tbody tr:first-child td {
+    border-top: 0;
+  }
+
+  .sales-status-pill {
+    text-transform: none !important;
+    gap: 0.5rem;
+  }
+
+  .sales-status-icon svg {
+    display: block;
+  }
+
+  .sales-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  .sales-action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    background: #f3f4f6;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .sales-action-eye {
+    background: rgba(124, 90, 200, 0.12);
+    border-color: rgba(124, 90, 200, 0.18);
+    color: #6a4caf;
+  }
+
+  .sales-action-more {
+    background: #f3f4f6;
+  }
+
+  .sales-table-footer {
+    padding: 0.5rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #64748b;
+  }
+
+  .sales-results-text {
+    font-weight: 700;
+    font-size: 0.82rem;
+  }
+
+  .sales-pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .sales-page-arrow {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: 1px solid #ddd7ee;
+    background: #e9e4f3;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 1rem;
+    padding: 0;
+  }
+
+  .sales-page-arrow[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .sales-page-num {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    background: #ffffff;
+    color: #6a4caf;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 1rem;
+    padding: 0;
+  }
+
+  .sales-page-num.is-active {
+    background: linear-gradient(135deg, #7c5ac8 0%, #5f3faa 100%);
+    border-color: #5f3faa;
+    color: #ffffff;
+  }
+
+  .sales-page-arrow:not([disabled]):hover,
+  .sales-page-num:not(.is-active):hover {
+    background: #f5f3ff;
+    border-color: #d7ccfa;
+    color: #5f3faa;
+  }
+
+  #customers-panel.admin-main-panel {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .customers-table-shell {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .customers-toolbar {
+    padding: 0.65rem 0.75rem;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .customers-search-wrap {
+    position: relative;
+  }
+
+  .customers-search-wrap::before {
+    content: "⌕";
+    position: absolute;
+    left: 0.65rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 0.86rem;
+    pointer-events: none;
+  }
+
+  .customers-search-wrap input {
+    padding-left: 1.85rem;
+  }
+
+  .btn-customer-register {
+    background: #6a4caf;
+    border-color: #6a4caf;
+    color: #fff;
+    font-weight: 700;
+    border-radius: 6px;
+    height: 38px;
+    min-height: 38px;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    padding: 0.42rem 0.85rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .customer-register-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    flex-shrink: 0;
+    color: currentColor;
+  }
+
+  .btn-customer-register:hover {
+    background: #5a3f9e;
+    border-color: #5a3f9e;
+    color: #fff;
+  }
+
+  .register-customer-modal .modal-dialog {
+    max-width: 660px;
+  }
+
+  .register-customer-modal .modal-header,
+  .register-customer-modal .modal-footer {
+    padding: 1rem 1.2rem;
+  }
+
+  .register-customer-modal .modal-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+  }
+
+  .register-customer-modal .modal-body {
+    padding: 1rem 1.2rem 1.1rem;
+  }
+
+  .register-customer-modal .form-label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1f2937;
+    margin-bottom: 0.35rem;
+  }
+
+  .register-customer-modal .form-control {
+    min-height: 46px;
+    border-color: #d1d5db;
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+
+  .register-customer-modal .form-control:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 0.2rem rgba(106, 76, 175, 0.16);
+  }
+
+  .register-customer-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .register-customer-modal .btn-primary {
+    background: #6a4caf;
+    border-color: #6a4caf;
+    font-weight: 700;
+  }
+
+  .register-customer-modal .btn-primary:hover,
+  .register-customer-modal .btn-primary:focus-visible {
+    background: #5a3f9e;
+    border-color: #5a3f9e;
+  }
+
+  .customers-table {
+    margin-bottom: 0;
+    font-size: 0.96rem;
+  }
+
+  .customers-table thead th {
+    font-size: 0.78rem;
+    text-transform: none;
+    letter-spacing: 0;
+    color: #111827;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0.6rem 0.75rem;
+    font-weight: 700;
+  }
+
+  .customers-table tbody td {
+    padding: 0.58rem 0.75rem;
+    vertical-align: middle;
+    border-color: #eef2f7;
+  }
+
+  .loyalty-points-pill {
+    display: inline-block;
+    background: #2563eb;
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .customers-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+    margin-bottom: 0;
+  }
+
+  .customers-chart-card {
+    background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+    border: 1px solid #e6eaf3;
+    border-radius: 12px;
+    padding: 0.7rem 0.8rem 0.6rem;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+  }
+
+  .customers-chart-title {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #6b7280;
+    font-weight: 700;
+  }
+
+  .customers-chart-value {
+    margin: 0.18rem 0 0.35rem;
+    font-size: 1.3rem;
+    line-height: 1.1;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  /* Same footprint as before (~280px); Chart.js aspectRatio keeps a round donut. */
+  .customers-chart-canvas {
+    display: block;
+    width: min(280px, 100%) !important;
+    max-width: 100%;
+    height: auto !important;
+    margin: 0.35rem auto 0.85rem;
+  }
+
+  .customer-leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-top: 0.35rem;
+  }
+
+  .customer-leaderboard-item {
+    width: 100%;
+    border: 1px solid #e6eaf3;
+    background: #fff;
+    border-radius: 10px;
+    padding: 0.55rem 0.65rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: transform 0.06s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+
+  .customer-leaderboard-item:hover {
+    border-color: rgba(106, 76, 175, 0.35);
+    box-shadow: 0 10px 18px rgba(15, 23, 42, 0.06);
+  }
+
+  .customer-leaderboard-left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .customer-leaderboard-rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 24px;
+    border-radius: 999px;
+    background: rgba(106, 76, 175, 0.12);
+    color: #6a4caf;
+    font-weight: 800;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+  }
+
+  .customer-leaderboard-name {
+    font-weight: 800;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .customer-leaderboard-points {
+    flex-shrink: 0;
+    color: #1d4ed8;
+    font-weight: 900;
+    font-size: 0.92rem;
+  }
+
+  .customer-leaderboard-list.compact .customer-leaderboard-item {
+    padding: 0.45rem 0.6rem;
+  }
+
+  .customers-chart-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .customers-chart-head.segments-head {
+    justify-content: flex-start;
+  }
+
+  .customers-chart-head .customers-chart-value {
+    margin: 0;
+    font-size: 1.15rem;
+    white-space: nowrap;
+  }
+
+  .customers-chart-meta {
+    margin: -0.15rem 0 0.35rem;
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .customers-chart-meta-value {
+    color: #0f172a;
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  .customers-chart-card.segment-card,
+  .customers-chart-card.points-card {
+    padding: 0.7rem 0.8rem 0.6rem;
+  }
+
+  @media (max-width: 767.98px) {
+    .sales-toolbar {
+      grid-template-columns: 1fr;
+    }
+
+    .customers-toolbar {
+      grid-template-columns: 1fr;
+    }
+
+    .customers-charts-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .stock-toolbar {
+      grid-template-columns: 1fr;
+    }
+
+    .purchase-toolbar {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .product-modal .modal-dialog {
+    max-width: 640px;
+  }
+
+  .product-modal .modal-header,
+  .product-modal .modal-footer {
+    padding: 1rem 1.25rem;
+  }
+
+  .product-modal .modal-body {
+    padding: 1.25rem;
+  }
+
+  .product-modal .modal-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1f2937;
+  }
+
+  .product-form-grid-2,
+  .product-form-grid-3 {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .product-form-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .product-form-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .product-modal .form-label {
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.35rem;
+  }
+
+  .required-mark {
+    color: #ef4444;
+  }
+
+  .currency-field {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid #d9d9f3;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .currency-field span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    border-right: 1px solid #d9d9f3;
+    background: #fff;
+    font-weight: 700;
+  }
+
+  .currency-field input {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .currency-field:focus-within {
+    border-color: #a6b4ff;
+    box-shadow: 0 0 0 .2rem rgba(106, 76, 175, .12);
+  }
+
+  .product-modal .form-control,
+  .product-modal .form-select {
+    min-height: 46px;
+    border-color: #d9d9f3;
+    border-radius: 10px;
+  }
+
+  .product-modal .form-text {
+    color: #6b7280;
+  }
+
+  .product-upload-box {
+    border: 1px solid #d9d9f3;
+    border-radius: 10px;
+    padding: 0.75rem;
+    background: #fff;
+  }
+
+  @media (max-width: 767.98px) {
+    .product-form-grid-2,
+    .product-form-grid-3 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 991.98px) {
+    .admin-app {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "topbar"
+        "stats"
+        "body"
+        "sidebar";
+    }
+
+    .admin-sidebar {
+      min-height: auto;
+    }
+
+    .pos-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .pos-catalog-head,
+    .pos-grid-2,
+    .pos-product-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .products-toolbar {
+      grid-template-columns: 1fr;
+    }
+  }
+  /* Dashboard (matching screenshot layout) */
+  .dashboard-kpi-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 18px rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    padding: 1.05rem 1.15rem;
+    height: 116px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .dashboard-kpi-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+  }
+
+  .dashboard-kpi-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .dashboard-kpi-icon--blue {
+    background: rgba(37, 99, 235, 0.10);
+    color: #2563eb;
+  }
+  .dashboard-kpi-icon--green {
+    background: #d5ebe7;
+    color: #0f9b77;
+  }
+  .dashboard-kpi-icon--purple {
+    background: rgba(124, 90, 200, 0.12);
+    color: #6a4caf;
+  }
+
+  .dashboard-kpi-title {
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #334155;
+    margin-top: 0.05rem;
+  }
+
+  .dashboard-kpi-value {
+    font-weight: 900;
+    font-size: 1.95rem;
+    color: #0f172a;
+    line-height: 1.1;
+    margin-top: 0.25rem;
+  }
+
+  .dashboard-kpi-sub {
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+    text-transform: lowercase;
+  }
+
+  .dashboard-kpi-delta {
+    font-weight: 700;
+    font-size: 0.74rem;
+    color: #94a3b8;
+    margin-top: 0.4rem;
+  }
+
+  .dashboard-summary-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 10px 18px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+    height: 430px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dashboard-summary-header {
+    padding: 1rem 1rem 0.65rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .dashboard-summary-title {
+    font-weight: 900;
+    font-size: 1rem;
+    color: #334155;
+  }
+
+  .dashboard-view-all {
+    font-weight: 800;
+    font-size: 0.82rem;
+    color: #64748b;
+    text-decoration: none;
+  }
+  .dashboard-view-all:hover {
+    color: #334155;
+    text-decoration: underline;
+  }
+
+  .dashboard-summary-list {
+    padding: 0 0;
+  }
+
+  .dashboard-list-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 1rem;
+    border-top: 1px solid #eef2f7;
+  }
+  .dashboard-list-row:first-child {
+    border-top: 0;
+  }
+
+  .dashboard-row-left {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    min-width: 0;
+  }
+
+  .dashboard-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: #f3f4f6;
+    flex-shrink: 0;
+  }
+
+  .dashboard-row-name {
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 250px;
+  }
+
+  .dashboard-left-badge {
+    background: rgba(225, 29, 72, 0.10);
+    color: #e11d48;
+    border-radius: 10px;
+    padding: 0.25rem 0.65rem;
+    font-weight: 900;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  .dashboard-rank-pill {
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(124, 90, 200, 0.12);
+    color: #6a4caf;
+    font-weight: 900;
+    flex-shrink: 0;
+    font-size: 0.78rem;
+  }
+
+  .dashboard-rank-pill--gold {
+    background: rgba(124, 90, 200, 0.12);
+    color: #6a4caf;
+  }
+  .dashboard-rank-pill--silver {
+    background: rgba(124, 90, 200, 0.12);
+    color: #6a4caf;
+  }
+  .dashboard-rank-pill--bronze {
+    background: rgba(124, 90, 200, 0.12);
+    color: #6a4caf;
+  }
+
+  .dashboard-units {
+    font-weight: 900;
+    font-size: 0.95rem;
+    color: #0f172a;
+    white-space: nowrap;
+  }
+
+  .dashboard-summary-footer {
+    margin-top: auto;
+    padding: 0.85rem 1rem 1rem 1rem;
+    border-top: 1px solid #eef2f7;
+    text-align: center;
+  }
+
+  .dashboard-summary-footer a {
+    font-weight: 900;
+    font-size: 0.82rem;
+    color: #64748b;
+    text-decoration: none;
+  }
+  .dashboard-summary-footer a:hover {
+    color: #334155;
+    text-decoration: underline;
+  }
+
+  /* Final override: keep card/panel visuals consistent across sections */
+  .dashboard-card,
+  .admin-main-panel,
+  .pos-catalog,
+  .pos-cart,
+  .products-panel-shell,
+  .stock-panel-shell,
+  .stock-table-card,
+  .purchase-panel-shell,
+  .purchase-table-card {
+    background: #ffffff;
+    border: 1px solid #e7eaf1;
+    border-radius: 12px;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+  }
+
+  .dashboard-card .card-header,
+  .admin-main-panel__head,
+  .pos-catalog-head,
+  .products-toolbar,
+  .stock-toolbar,
+  .purchase-toolbar,
+  .stock-panel-toolbar,
+  .purchase-panel-toolbar {
+    background: #ffffff;
+    border-bottom: 1px solid #eef2f7;
+  }
+
+  /* Stock Movements: no extra divider between toolbar row and table (see .stock-panel-toolbar rule above). */
+  #stock-panel .stock-panel-toolbar {
+    border-bottom: 0;
+  }
+
+  /* Purchase Orders: same — no toolbar border above the table. */
+  #purchase-panel .purchase-panel-toolbar {
+    border-bottom: 0;
+  }
+
+  .dashboard-card .table thead th,
+  .admin-table thead th,
+  .products-table thead th,
+  .stock-table thead th,
+  .stock-mv-table thead th,
+  .purchase-table thead th {
+    background: #ffffff;
+    border-bottom: 1px solid #eef2f7;
+  }
+
+  .dashboard-card .table tbody td,
+  .admin-table tbody td,
+  .products-table tbody td,
+  .stock-table tbody td,
+  .stock-mv-table tbody td,
+  .purchase-table tbody td {
+    border-top-color: #f1f5f9;
+    border-bottom-color: #f1f5f9;
+  }
+
+  /* Final override: unify all admin search bars with icon + divider style */
+  .pos-search-wrap,
+  .products-search-wrap,
+  .stock-search-wrap,
+  .purchase-search-wrap,
+  .sales-search-wrap,
+  .customers-search-wrap {
+    position: relative;
+  }
+
+  .pos-search-wrap::before,
+  .products-search-wrap::before,
+  .stock-search-wrap::before,
+  .purchase-search-wrap::before,
+  .sales-search-wrap::before,
+  .customers-search-wrap::before {
+    content: "";
+    position: absolute;
+    left: 0.82rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='11' cy='11' r='7' stroke='%23334155' stroke-width='2'/%3E%3Cpath d='M20 20l-4.2-4.2' stroke='%23334155' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    opacity: 0.9;
+    pointer-events: none;
+  }
+
+  .pos-search-wrap::after,
+  .products-search-wrap::after,
+  .stock-search-wrap::after,
+  .purchase-search-wrap::after,
+  .sales-search-wrap::after,
+  .customers-search-wrap::after {
+    content: "";
+    position: absolute;
+    left: 2.15rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 56%;
+    background: #e5e7eb;
+    pointer-events: none;
+  }
+
+  .pos-search-wrap input,
+  .products-search-wrap input,
+  .stock-search-wrap input,
+  .purchase-search-wrap input,
+  .sales-search-wrap input,
+  .customers-search-wrap input {
+    height: 38px;
+    min-height: 38px;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    padding-left: 2.65rem;
+    padding-top: 0.42rem;
+    padding-bottom: 0.42rem;
+    border: 1px solid #d8deea;
+    border-radius: 8px;
+    background: #ffffff;
+  }
+
+  .pos-search-wrap input:focus,
+  .products-search-wrap input:focus,
+  .stock-search-wrap input:focus,
+  .purchase-search-wrap input:focus,
+  .sales-search-wrap input:focus,
+  .customers-search-wrap input:focus {
+    border-color: #b6c2d9;
+    box-shadow: 0 0 0 0.2rem rgba(124, 90, 200, 0.12);
+  }
+
+</style>
+
+<div class="admin-app">
+  <nav id="sidebar" class="admin-sidebar" aria-label="Admin navigation">
+    <div class="admin-brand">
+      <h2>Kizuna</h2>
+      <p>Collections</p>
+    </div>
+
+    <div class="admin-nav">
+      <p class="admin-nav-label">Main</p>
+      <div class="admin-nav-group">
+        <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=dashboard-panel" class="admin-nav-link js-admin-nav active" data-target="dashboard-panel"><span class="nav-glyph icon-dashboard" aria-hidden="true"></span>Dashboard</a>
+        <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=pos-panel" class="admin-nav-link js-admin-nav" data-target="pos-panel"><span class="nav-glyph icon-pos" aria-hidden="true"></span>POS Terminal</a>
+      </div>
+
+      <p class="admin-nav-label">Inventory</p>
+      <div class="admin-nav-group">
+        <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=products-panel" class="admin-nav-link js-admin-nav" data-target="products-panel"><span class="nav-glyph icon-products" aria-hidden="true"></span>Products</a>
+        <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=stock-panel" class="admin-nav-link js-admin-nav" data-target="stock-panel"><span class="nav-glyph icon-stock" aria-hidden="true"></span>Stock Movements</a>
+        <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=purchase-panel" class="admin-nav-link js-admin-nav" data-target="purchase-panel"><span class="nav-glyph icon-purchase" aria-hidden="true"></span>Purchase Orders</a>
+        <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=sales-panel" class="admin-nav-link js-admin-nav" data-target="sales-panel"><span class="nav-glyph icon-sales" aria-hidden="true"></span>Sales Orders</a>
+      </div>
+
+      <p class="admin-nav-label">People</p>
+      <div class="admin-nav-group">
+        <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=customers-panel" class="admin-nav-link js-admin-nav" data-target="customers-panel"><span class="nav-glyph icon-customers" aria-hidden="true"></span>Customers</a>
+      </div>
+    </div>
+
+    <div class="admin-sidebar-footer">
+      <div class="admin-user-chip">
+        <span class="admin-user-avatar">A</span>
+        <span>Admin</span>
+      </div>
+      <a class="admin-logout" href="{{ base_url }}/logout"><span class="admin-logout-icon" aria-hidden="true"></span>Logout</a>
+      <div class="admin-status">System Online · IPT 1 Project</div>
+    </div>
+  </nav>
+
+  <div id="topbar" class="admin-topbar">
+    <h6 id="adminTopbarTitle">
+      <span class="admin-topbar-icon-box" aria-hidden="true">
+        <span id="adminTopbarIcon" class="nav-glyph icon-dashboard"></span>
+      </span>
+      <span id="adminTopbarText">Dashboard</span>
+    </h6>
+    <div class="admin-topbar-meta">
+      <span id="live-clock">--:--:--</span>
+      <span class="online-pill">Online</span>
+    </div>
+  </div>
+
+  <div class="row admin-stats" aria-label="Dashboard stats">
+    <div class="col-sm-6 col-xl-4">
+      <div class="dashboard-kpi-card">
+        <div class="dashboard-kpi-top">
+          <div class="dashboard-kpi-icon dashboard-kpi-icon--blue" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.607l-1.5 7A.5.5 0 0 1 13 11H4.14a.5.5 0 0 1-.49-.392L1.01 2.5H.5A.5.5 0 0 1 0 1.5z"/>
+              <path d="M4 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM9 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="dashboard-kpi-title">Sales Today</div>
+            <div class="dashboard-kpi-value">{{ stats.today_transactions or 0 }}</div>
+            <div class="dashboard-kpi-sub">sales processed today</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+      <div class="dashboard-kpi-card">
+        <div class="dashboard-kpi-top">
+          <div class="dashboard-kpi-icon dashboard-kpi-icon--green" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M1 3a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v2H1V3z"/>
+              <path d="M0 7.5A.5.5 0 0 1 .5 7h15a.5.5 0 0 1 .5.5V13a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V7.5z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="dashboard-kpi-title">Revenue Today</div>
+            <div class="dashboard-kpi-value">₱{{ "%.2f"|format(stats.today_revenue or 0) }}</div>
+            <div class="dashboard-kpi-sub">collected today</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+      <div class="dashboard-kpi-card">
+        <div class="dashboard-kpi-top">
+          <div class="dashboard-kpi-icon dashboard-kpi-icon--purple" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 1c-3 0-5 .7-5 2s2 2 5 2 5-.7 5-2-2-2-5-2z"/>
+              <path d="M3 5.5V8c0 1.3 2.2 2 5 2s5-.7 5-2V5.5c-1 .8-3 1.5-5 1.5s-4-.7-5-1.5z"/>
+              <path d="M3 9.5V12c0 1.3 2.2 2 5 2s5-.7 5-2V9.5c-1 .8-3 1.5-5 1.5s-4-.7-5-1.5z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="dashboard-kpi-title">Total Revenue</div>
+            <div class="dashboard-kpi-value">₱{{ "%.2f"|format(stats.all_time_revenue or 0) }}</div>
+            <div class="dashboard-kpi-sub">total since launch</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-body">
+    <section id="dashboard-panel" class="admin-panel">
+      <div class="row dashboard-grid">
+        <div class="col-lg-6">
+          <div class="dashboard-summary-card">
+            <div class="dashboard-summary-header">
+              <div class="dashboard-summary-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="margin-right:0.55rem; vertical-align:-3px;">
+                  <path d="M12 2L2 20h20L12 2Z" stroke="#e11d48" stroke-width="2" stroke-linejoin="round"/>
+                  <path d="M12 9v4" stroke="#e11d48" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M12 17h.01" stroke="#e11d48" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Low Stock Items
+              </div>
+              <a
+                class="dashboard-view-all"
+                href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=stock-panel"
+              >View all</a>
+            </div>
+
+            <div class="dashboard-summary-list">
+              {% if low_stock_products and low_stock_products|length > 0 %}
+                {% for p in low_stock_products[:5] %}
+                  <div class="dashboard-list-row">
+                    <div class="dashboard-row-left">
+                      <img
+                        class="dashboard-thumb"
+                        src="{{ base_url }}/static/img/products/{{ p.image or 'placeholder.png' }}"
+                        alt="{{ p.name }}"
+                      >
+                      <div class="dashboard-row-name">{{ p.name }}</div>
+                    </div>
+                    <div class="dashboard-left-badge">{{ p.stock or 0 }} left</div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div style="padding: 2.2rem 1rem; text-align: center; color:#64748b; font-weight:800;">
+                  No low stock items.
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="dashboard-summary-footer">
+              <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=stock-panel">View all low stock items</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="dashboard-summary-card">
+            <div class="dashboard-summary-header">
+              <div class="dashboard-summary-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="margin-right:0.55rem; vertical-align:-3px;">
+                  <path d="M4 19h16" stroke="#6a4caf" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M6 16V9" stroke="#6a4caf" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M12 16V5" stroke="#6a4caf" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M18 16V11" stroke="#6a4caf" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Top Products
+              </div>
+              <a
+                class="dashboard-view-all"
+                href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=top-products-panel"
+              >View all</a>
+            </div>
+
+            <div class="dashboard-summary-list">
+              {% if top_products and top_products|length > 0 %}
+                {% for row in top_products[:5] %}
+                  <div class="dashboard-list-row">
+                    <div class="dashboard-row-left">
+                      {% if loop.index == 1 %}
+                        <span class="dashboard-rank-pill dashboard-rank-pill--gold" aria-label="1st" title="1st">1</span>
+                      {% elif loop.index == 2 %}
+                        <span class="dashboard-rank-pill dashboard-rank-pill--silver" aria-label="2nd" title="2nd">2</span>
+                      {% elif loop.index == 3 %}
+                        <span class="dashboard-rank-pill dashboard-rank-pill--bronze" aria-label="3rd" title="3rd">3</span>
+                      {% else %}
+                        <span class="dashboard-rank-pill">{{ loop.index }}</span>
+                      {% endif %}
+                      <div class="dashboard-row-name">{{ row.product_name }}</div>
+                    </div>
+                    <div class="dashboard-units">{{ row.units_sold }} units</div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div style="padding: 2.2rem 1rem; text-align: center; color:#64748b; font-weight:800;">
+                  No top products yet.
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="dashboard-summary-footer">
+              <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=top-products-panel">View all top products</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pos-panel" class="admin-panel" hidden>
+      <div class="pos-layout">
+        <div class="pos-catalog">
+          <div class="pos-catalog-head">
+            <div class="pos-search-wrap">
+              <input type="text" id="posSearchInput" class="form-control" placeholder="Search product by name or SKU..." />
+            </div>
+            <select id="posCategoryFilter" class="form-select">
+              <option value="">All Categories</option>
+              {% for cat in product_categories %}
+              <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% set pos_total = (all_products|length if all_products else 0) %}
+          <div class="pos-product-grid" id="posProductGrid">
+            {% for p in all_products %}
+            <form method="post" action="{{ base_url }}/admin/pos/add/{{ p.id }}?admin={{ is_admin }}&user_id={{ user_id }}&panel=pos-panel" data-pos-name="{{ (p.name or '')|lower }}" data-pos-category="{{ (p.category or '')|lower }}">
+              <button type="submit" class="pos-product-btn" {% if (p.stock or 0) <= 0 %}disabled{% endif %}>
+                <span class="pos-product-thumb-wrap">
+                  <img class="pos-product-thumb" src="{{ base_url }}/static/img/products/{{ p.image or 'placeholder.png' }}" alt="{{ p.name }}">
+                </span>
+                <span class="pos-product-name">{{ p.name }}</span>
+                <span class="pos-product-price">₱{{ "%.2f"|format(p.price or 0) }}</span>
+                {% if (p.stock or 0) > 0 %}
+                <span class="pos-product-stock">{{ p.stock or 0 }} piece left</span>
+                {% else %}
+                <span class="pos-product-stock text-danger">Out of stock</span>
+                {% endif %}
+              </button>
+            </form>
+            {% endfor %}
+          </div>
+          <div class="pos-catalog-footer">
+            <div class="pos-pagination">
+              <button type="button" class="pos-page-arrow" aria-label="Previous">&lt;</button>
+              <button type="button" class="pos-page-num is-active" aria-label="Page 1">1</button>
+              <button type="button" class="pos-page-num" aria-label="Page 2">2</button>
+              <button type="button" class="pos-page-num" aria-label="Page 3">3</button>
+              <button type="button" class="pos-page-arrow" aria-label="Next">&gt;</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pos-cart">
+          <div class="pos-cart-head">
+            <span class="pos-cart-head-left">
+              <span class="pos-cart-head-icon" aria-hidden="true">🛒</span>
+              <span>Current Cart</span>
+            </span>
+            {% if pos_cart_items and pos_cart_items|length > 0 %}
+              <span class="pos-cart-count">{{ pos_cart_items|length }} items</span>
+            {% endif %}
+          </div>
+          {% if pos_cart_items and pos_cart_items|length > 0 %}
+          <div class="pos-cart-items">
+            {% for row in pos_cart_items %}
+              <div class="pos-cart-item">
+                <img class="pos-cart-item-thumb" src="{{ base_url }}/static/img/products/{{ row.product.image or 'placeholder.png' }}" alt="{{ row.product.name }}">
+                <div>
+                  <div class="pos-cart-item-name">{{ row.product.name }}</div>
+                  <div class="pos-cart-item-price">₱{{ "%.2f"|format(row.product.price or 0) }}</div>
+                </div>
+                <div class="pos-cart-item-right">
+                  <div class="pos-qty-group">
+                    <form method="post" action="{{ base_url }}/admin/pos/item/{{ row.pos_item.id }}/update?admin={{ is_admin }}&user_id={{ user_id }}" class="d-inline">
+                      <input type="hidden" name="action" value="dec">
+                      <button type="submit" class="pos-qty-btn" aria-label="Decrease quantity">−</button>
+                    </form>
+                    <span class="pos-qty-value">{{ row.pos_item.quantity }}</span>
+                    <form method="post" action="{{ base_url }}/admin/pos/item/{{ row.pos_item.id }}/update?admin={{ is_admin }}&user_id={{ user_id }}" class="d-inline">
+                      <input type="hidden" name="action" value="inc">
+                      <button type="submit" class="pos-qty-btn" aria-label="Increase quantity">+</button>
+                    </form>
+                    <form method="post" action="{{ base_url }}/admin/pos/item/{{ row.pos_item.id }}/remove?admin={{ is_admin }}&user_id={{ user_id }}" class="d-inline">
+                      <button type="submit" class="pos-remove-btn" aria-label="Remove item">🗑</button>
+                    </form>
+                  </div>
+                  <div class="pos-cart-item-total">₱{{ "%.2f"|format(row.line_total or 0) }}</div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="pos-empty">
+            <div>
+              <span class="pos-empty-icon">🛒</span>
+              <div>Cart is empty. Click a product to add it.</div>
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="pos-summary">
+            <div class="pos-summary-row"><span>Subtotal</span><span>₱{{ "%.2f"|format(pos_subtotal or 0) }}</span></div>
+            <div class="pos-summary-row"><span>Discount</span><span>₱0.00</span></div>
+            <div class="pos-summary-row"><span>Tax</span><span>₱0.00</span></div>
+            <div class="pos-summary-total"><span>TOTAL</span><span>₱{{ "%.2f"|format(pos_subtotal or 0) }}</span></div>
+          </div>
+
+          <form method="post" action="{{ base_url }}/admin/pos/process?admin={{ is_admin }}&user_id={{ user_id }}" class="pos-checkout">
+            <div class="pos-grid-2">
+              <div>
+                <label>Cashier ID</label>
+                <input type="text" class="form-control form-control-sm" value="{{ pos_cashier_id or 1 }}" readonly>
+              </div>
+              <div>
+                <label>Customer ID (opt.)</label>
+                <input id="posCustomerId" name="customer_id" type="text" class="form-control form-control-sm" value="" placeholder="Leave blank">
+              </div>
+            </div>
+            <div class="pos-grid-2">
+              <div>
+                <label>Payment Method</label>
+                <select class="form-select form-select-sm" name="payment_method">
+                  <option value="Cash">Cash</option>
+                  <option value="GCash">GCash</option>
+                  <option value="Card">Card</option>
+                </select>
+              </div>
+              <div>
+                <label>Amount Tendered</label>
+                <input type="text" class="form-control form-control-sm" value="0.00" name="amount_tendered">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-success w-100">Process Sale</button>
+          </form>
+
+          <form method="post" action="{{ base_url }}/admin/pos/clear?admin={{ is_admin }}&user_id={{ user_id }}" class="px-3 pb-3">
+            <button type="submit" class="btn btn-outline-secondary w-100">Clear Cart</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <div class="modal fade" id="posSaleCompleteModal" tabindex="-1" aria-labelledby="posSaleCompleteLabel" aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content pos-sale-complete-card border-0 shadow">
+          <div class="modal-header border-0 pb-0 align-items-center">
+            <div class="d-flex align-items-center gap-2">
+              <span class="pos-sale-complete-check" aria-hidden="true">✓</span>
+              <h2 class="modal-title h5 mb-0 pos-sale-complete-title" id="posSaleCompleteLabel">Sale Completed!</h2>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body pt-2">
+            <div class="pos-receipt-box" role="region" aria-label="Receipt">
+              <div id="posReceiptMeta" class="pos-receipt-meta text-muted small mb-2"></div>
+              <hr class="pos-receipt-hr my-2" />
+              <div id="posReceiptLines" class="pos-receipt-lines small"></div>
+              <hr class="pos-receipt-hr my-2" />
+              <div class="d-flex justify-content-between small mb-1"><span>Subtotal</span><span id="posReceiptSubtotal">₱0.00</span></div>
+              <div class="d-flex justify-content-between fw-bold mb-1"><span>TOTAL</span><span id="posReceiptTotal">₱0.00</span></div>
+              <div class="d-flex justify-content-between small text-muted mb-1"><span>Tendered</span><span id="posReceiptTendered">₱0.00</span></div>
+              <div class="d-flex justify-content-between small fw-bold pos-receipt-change"><span>Change</span><span id="posReceiptChange">₱0.00</span></div>
+            </div>
+            <button type="button" class="btn btn-main w-100 mt-3 d-flex align-items-center justify-content-center gap-2" data-bs-dismiss="modal">
+              <span class="pos-new-tx-icon" aria-hidden="true">+</span>
+              New Transaction
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section id="products-panel" class="admin-main-panel admin-panel" hidden>
+      <div class="products-panel-shell">
+      <div class="products-toolbar">
+        <div class="products-search-wrap">
+          <input type="text" id="productsSearchInput" class="form-control form-control-sm" placeholder="Search by name or SKU..." />
+        </div>
+        <select id="productsCategoryFilter" class="form-select form-select-sm">
+          <option value="">All Categories</option>
+          {% for cat in product_categories %}
+          <option value="{{ cat }}">{{ cat }}</option>
+          {% endfor %}
+        </select>
+        <button type="button" class="btn btn-main btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
+          <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;margin-right:0.35rem;">+</span>
+          Add Product
+        </button>
+      </div>
+      {% set recent_products = (all_products|sort(attribute='id') if all_products else []) %}
+      {% set products_total = (recent_products|length if recent_products else 0) %}
+      {% if recent_products and recent_products|length > 0 %}
+      <div class="table-responsive">
+        <table class="table products-table align-middle" id="productsDataTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Product Name</th>
+              <th>SKU</th>
+              <th>Category</th>
+              <th class="text-end">Price</th>
+              <th>Stock</th>
+              <th>Status</th>
+              <th class="text-center">ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in recent_products %}
+            <tr data-product-name="{{ (p.name or '')|lower }}" data-product-sku="{{ ((p.category or 'PRD')[:3] ~ '-' ~ '%03d'|format(p.id))|lower }}" data-product-category="{{ (p.category or '')|lower }}">
+              <td class="products-id">#{{ p.id }}</td>
+              <td>
+                <div class="products-name">{{ p.name }}</div>
+                <div class="products-code">8888{{ "%04d"|format(p.id) }}</div>
+              </td>
+              <td><span class="products-sku">{{ (p.category or "PRD")[:3]|upper }}-{{ "%03d"|format(p.id) }}</span></td>
+              <td>
+                <div class="products-category">
+                  <svg class="products-cat-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M3 7.5c0-1.38 1.12-2.5 2.5-2.5h9c.66 0 1.3.26 1.77.73l2.5 2.5c.47.47.73 1.11.73 1.77v8.5c0 1.38-1.12 2.5-2.5 2.5H5.5C4.12 22 3 20.88 3 19.5v-12Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  <span class="products-category-text">{{ p.category or "—" }}</span>
+                </div>
+              </td>
+              <td class="text-end">₱{{ "%.2f"|format(p.price or 0) }}</td>
+              <td>
+                {% if (p.stock or 0) <= 0 %}
+                <span class="stock-pill out">Out of Stock</span>
+                {% elif (p.stock or 0) <= 5 %}
+                <span class="stock-pill low">{{ p.stock or 0 }} piece</span>
+                {% else %}
+                <span class="stock-pill ok">{{ p.stock or 0 }} pad</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="status-pill status-pill--active">
+                  <span class="status-dot" aria-hidden="true"></span>
+                  Active
+                </span>
+              </td>
+              <td class="text-center text-nowrap">
+                <button
+                  type="button"
+                  class="products-action-btn products-edit-btn js-edit-product"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editProductModal"
+                  data-id="{{ p.id }}"
+                  data-name="{{ p.name|e }}"
+                  data-brand="{{ p.brand|e }}"
+                  data-category="{{ p.category|e }}"
+                  data-image="{{ p.image|e }}"
+                  data-price="{{ p.price or 0 }}"
+                  data-stock="{{ p.stock or 0 }}"
+                  aria-label="Edit"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <a
+                  class="products-action-btn products-delete-btn ms-1"
+                  href="{{ base_url }}/delete/{{ p.id }}?admin={{ is_admin }}&user_id={{ user_id }}&panel=products-panel"
+                  onclick="return window.confirm('Delete this product? This action cannot be undone.');"
+                  aria-label="Delete"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M8 6V4h8v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  </svg>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="products-table-footer">
+        <div class="products-results-text">
+          Showing {{ (1 if products_total > 0 else 0) }} to {{ (10 if products_total > 10 else products_total) }} of {{ products_total }} results
+        </div>
+        <div class="products-pagination">
+          <button type="button" class="products-page-arrow" disabled aria-label="Previous">&lt;</button>
+          <button type="button" class="products-page-num is-active" aria-label="Page 1">1</button>
+          <button type="button" class="products-page-arrow" disabled aria-label="Next">&gt;</button>
+        </div>
+      </div>
+      {% else %}
+      <div class="p-4">
+        <div class="alert alert-light border mb-0">No products yet. Add your first item to see it listed here.</div>
+      </div>
+      {% endif %}
+      </div>
+    </section>
+
+    <section id="stock-panel" class="admin-main-panel admin-panel" hidden>
+      <div class="stock-panel-shell">
+        <div class="stock-panel-toolbar">
+          <div class="stock-search-wrap stock-search-wrap--wide">
+            <input type="text" id="stockSearchInput" class="form-control" placeholder="Search movements..." />
+          </div>
+          <select id="stockTypeFilter" class="form-select stock-type-filter">
+            <option value="">All Types</option>
+            <option value="IN">IN</option>
+            <option value="OUT">OUT</option>
+            <option value="Restock">Restock</option>
+            <option value="Deduct">Deduct</option>
+          </select>
+        </div>
+
+        <div class="stock-table-card">
+          <div class="table-responsive">
+            <table class="table stock-mv-table align-middle mb-0" id="stockDataTable">
+              <thead>
+                <tr>
+                  <th class="stock-th-left">REF #</th>
+                  <th class="stock-th-left">TYPE</th>
+                  <th class="stock-th-left">DESCRIPTION</th>
+                  <th class="stock-th-center">AMOUNT / QTY</th>
+                  <th class="stock-th-left">CASHIER</th>
+                  <th class="stock-th-end">DATE &amp; TIME</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% set stock_total = (stock_movements|length if stock_movements else 0) %}
+                {% if stock_movements and stock_total > 0 %}
+                  {% for row in stock_movements %}
+                    {% set mv_type = (row.movement.type or '')|lower %}
+                    {% set moved = row.movement.moved_at or '—' %}
+                    {% set moved_parts = moved.split(' ') %}
+                    <tr data-stock-type="{{ mv_type }}" data-stock-text="{{ (row.product_name ~ ' ' ~ (row.movement.reason or '') ~ ' ' ~ (row.movement.moved_at or ''))|lower }}">
+                      <td class="text-muted">#{{ row.movement.id }}</td>
+                      <td>
+                        <span class="stock-mv-type-pill stock-mv-type-{{ mv_type|replace(' ', '-') }}">
+                          {{ row.movement.type }}
+                        </span>
+                      </td>
+                      <td class="text-muted">
+                        <div class="d-flex align-items-center gap-3 stock-desc-cell">
+                          <span class="stock-desc-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M12 2 3 7l9 5 9-5-9-5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                              <path d="M3 7v10l9 5 9-5V7" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                              <path d="M12 12v10" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            </svg>
+                          </span>
+                          <div style="min-width:0;">
+                            <div class="stock-desc-title text-truncate">{{ row.product_name }}</div>
+                            {% if row.movement.reason %}
+                              <div class="stock-desc-sub text-truncate">— {{ row.movement.reason }}</div>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </td>
+                      <td class="stock-td-center">
+                        <span class="stock-qty-pill">{{ row.movement.quantity }}</span>
+                      </td>
+                      <td class="stock-th-left">
+                        <span class="stock-cashier-cell">
+                          <span class="stock-cashier-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Z" stroke="currentColor" stroke-width="2"/>
+                              <path d="M3 21c1.5-4 6-6 9-6s7.5 2 9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                          </span>
+                          {{ row.movement.cashier_id or '—' }}
+                        </span>
+                      </td>
+                      <td class="stock-th-end stock-datetime-cell">
+                        <div class="stock-date">{{ moved_parts[0] if moved_parts|length > 0 else '—' }}</div>
+                        <div class="stock-time">{{ moved_parts[1] if moved_parts|length > 1 else '' }}</div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr><td colspan="6" class="text-center text-muted py-4">No movements found.</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="stock-table-footer">
+            <div class="stock-results-text">
+              Showing {{ (1 if stock_total > 0 else 0) }} to {{ (10 if stock_total > 10 else stock_total) }} of {{ stock_total }} results
+            </div>
+            <div class="stock-pagination">
+              <button type="button" class="stock-page-arrow" disabled aria-label="Previous">&lt;</button>
+              <button type="button" class="stock-page-num is-active" aria-label="Page 1">1</button>
+              <button type="button" class="stock-page-arrow" disabled aria-label="Next">&gt;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="purchase-panel" class="admin-main-panel admin-panel" hidden>
+      <div class="purchase-panel-shell">
+        <div class="purchase-panel-toolbar">
+          <div class="purchase-search-wrap purchase-search-wrap--wide">
+            <input
+              type="text"
+              id="purchaseSearchInput"
+              class="form-control"
+              placeholder="Search purchase orders..."
+            />
+          </div>
+          <button
+            type="button"
+            class="btn btn-po-create purchase-new-order-btn"
+            data-bs-toggle="modal"
+            data-bs-target="#purchaseOrderModal"
+          >
+            ＋ New Purchase Order
+          </button>
+        </div>
+
+        <div class="purchase-table-card">
+          <div class="table-responsive">
+            <table class="table purchase-table align-middle mb-0" id="purchaseDataTable">
+              <thead>
+                <tr>
+                  <th class="purchase-th-left">PO #</th>
+                  <th class="purchase-th-left">SUPPLIER</th>
+                  <th class="purchase-th-left">ORDER DATE</th>
+                  <th class="purchase-th-left">STATUS</th>
+                  <th class="purchase-th-end">TOTAL COST</th>
+                  <th class="purchase-th-end">ITEMS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% set po_total = (purchase_orders|length if purchase_orders else 0) %}
+                {% if purchase_orders and po_total > 0 %}
+                  {% for row in purchase_orders %}
+                    {% set po_status = (row.po.status or 'pending')|lower %}
+                    <tr data-purchase-text="{{ ('PO-' ~ row.po.id ~ ' ' ~ row.supplier_id ~ ' ' ~ po_status ~ ' ' ~ (row.po.created_at or row.po.order_date or row.po.date_created or ''))|lower }}">
+                      <td class="purchase-th-left">
+                        <div class="d-flex align-items-center gap-3">
+                          <span aria-hidden="true" style="width:28px;height:28px;border-radius:10px;background:rgba(124,90,200,.12);display:inline-flex;align-items:center;justify-content:center;color:#6a4caf;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                              <path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            </svg>
+                          </span>
+                          <span class="fw-semibold">PO-{{ "%03d"|format(row.po.id) }}</span>
+                        </div>
+                      </td>
+                      <td class="purchase-th-left">
+                        <div class="d-flex align-items-center gap-3">
+                          <span aria-hidden="true" style="width:28px;height:28px;border-radius:10px;background:rgba(124,90,200,.10);display:inline-flex;align-items:center;justify-content:center;color:#6a4caf;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M3 21h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                              <path d="M5 21V8l7-5 7 5v13" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                              <path d="M9 21v-7h6v7" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            </svg>
+                          </span>
+                          <span class="text-muted">{{ row.supplier_id }}</span>
+                        </div>
+                      </td>
+                      <td class="purchase-th-left">
+                        <div class="d-flex align-items-center gap-3">
+                          <span aria-hidden="true" style="width:28px;height:28px;border-radius:10px;background:rgba(124,90,200,.10);display:inline-flex;align-items:center;justify-content:center;color:#6a4caf;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M8 2v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                              <path d="M16 2v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                              <path d="M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                              <path d="M5 6h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            </svg>
+                          </span>
+                          <span class="text-muted">{{ row.po.created_at or row.po.order_date or row.po.date_created or "—" }}</span>
+                        </div>
+                      </td>
+                      <td class="purchase-th-left">
+                        <span class="po-status-pill
+                          {% if po_status == 'received' %}po-status-received{% elif po_status == 'cancelled' %}po-status-cancelled{% else %}po-status-pending{% endif %}">
+                          <span class="po-status-icon" aria-hidden="true">
+                            {% if po_status == 'cancelled' %}
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                              </svg>
+                            {% elif po_status == 'received' %}
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                              </svg>
+                            {% else %}
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2"/>
+                              </svg>
+                            {% endif %}
+                          </span>
+                          {{ po_status|capitalize }}
+                        </span>
+                      </td>
+                      <td class="purchase-td-end fw-semibold">₱{{ "%.2f"|format(row.po.total_cost or 0) }}</td>
+                      <td class="purchase-td-end">{{ row.item_count }} item(s)</td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr><td colspan="6" class="text-center text-muted py-4">No purchase orders yet.</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="purchase-table-footer">
+            <div class="purchase-results-text">
+              Showing {{ (1 if po_total > 0 else 0) }} to {{ (10 if po_total > 10 else po_total) }} of {{ po_total }} results
+            </div>
+            <div class="purchase-pagination">
+              <button type="button" class="purchase-page-arrow" disabled aria-label="Previous">&lt;</button>
+              <button type="button" class="purchase-page-num is-active" aria-label="Page 1">1</button>
+              <button type="button" class="purchase-page-arrow" disabled aria-label="Next">&gt;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="customers-panel" class="admin-main-panel admin-panel" hidden>
+      <div class="customers-toolbar">
+        <div class="customers-search-wrap">
+          <input type="text" id="customersSearchInput" class="form-control form-control-sm" placeholder="Search by name, phone, or email..." />
+        </div>
+        <button type="button" class="btn-customer-register" data-bs-toggle="modal" data-bs-target="#registerCustomerModal">
+          <svg class="customer-register-icon" viewBox="0 0 16 16" aria-hidden="true">
+            <path fill="currentColor" d="M10.5 5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM8 8.5c-2.6 0-4.7 1.5-4.9 3.4-.03.34.24.63.58.63h8.62c.34 0 .61-.29.58-.63-.2-1.9-2.3-3.4-4.9-3.4zM13 2.5a.5.5 0 0 1 .5.5V4H15a.5.5 0 0 1 0 1h-1.5v1a.5.5 0 0 1-1 0V5H11a.5.5 0 0 1 0-1h1.5V3a.5.5 0 0 1 .5-.5z"/>
+          </svg>
+          Register Customer
+        </button>
+      </div>
+      <div class="customers-table-shell">
+      <div class="table-responsive">
+        <table class="table customers-table align-middle" id="customersDataTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Full Name</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th class="text-end">Points</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if customers and customers|length > 0 %}
+              {% for c in customers %}
+              <tr data-customer-text="{{ (c.name ~ ' ' ~ (c.phone or '') ~ ' ' ~ (c.email or ''))|lower }}">
+                <td class="text-muted">{{ c.id }}</td>
+                <td class="fw-semibold">{{ c.name }}</td>
+                <td>{{ c.phone or "—" }}</td>
+                <td class="text-muted">{{ c.email or "—" }}</td>
+                <td class="text-end"><span class="loyalty-points-pill">★ {{ c.loyalty_points or 0 }} pts</span></td>
+              </tr>
+              {% endfor %}
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted py-3">No customers found.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+      </div>
+      <div class="customers-charts-grid">
+        <div class="customers-chart-card segment-card">
+          <div class="customers-chart-head segments-head">
+            <p class="customers-chart-title">Customer Segments</p>
+          </div>
+          <p class="customers-chart-value" id="customerSegmentsValue">0 customers</p>
+          <canvas id="customerTotalChart" class="customers-chart-canvas" aria-label="Total customers chart"></canvas>
+        </div>
+        <div class="customers-chart-card leaderboard-card">
+          <p class="customers-chart-title">Top Points Leaderboard</p>
+          <p class="customers-chart-value" id="customerTrendValue">0</p>
+          <div class="customer-leaderboard-list" id="topPointsLeaderboard"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sales-panel" class="admin-main-panel admin-panel" hidden>
+      <div class="sales-panel-shell">
+        <div class="sales-panel-toolbar">
+          <div class="sales-search-wrap sales-search-wrap--wide">
+            <input
+              type="text"
+              id="salesSearchInput"
+              class="form-control"
+              placeholder="Search sales by ID, status, date, or total..."
+            />
+          </div>
+          <select id="salesStatusFilter" class="form-select sales-status-filter">
+            <option value="">All Status</option>
+            <option value="placed">Placed</option>
+            <option value="processing">Processing</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="sales-table-card">
+          <div class="table-responsive">
+            <table class="table sales-table align-middle mb-0" id="salesDataTable">
+              <thead>
+                <tr>
+                  <th class="sales-th-left">SALE ID</th>
+                  <th class="sales-th-left">STATUS</th>
+                  <th class="sales-th-end">TOTAL</th>
+                  <th class="sales-th-end">DATE</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% set sales_total = (recent_sales|length if recent_sales else 0) %}
+                {% if recent_sales and sales_total > 0 %}
+                  {% for row in recent_sales %}
+                    {% set sale_status = (row.sale.status or "placed")|lower %}
+                    <tr data-sales-status="{{ sale_status }}" data-sales-text="{{ ('#' ~ row.sale.id ~ ' ' ~ sale_status ~ ' ' ~ (row.sale.sale_date or '') ~ ' ' ~ ('%.2f'|format(row.sale.total_amount or 0)))|lower }}">
+                      <td class="text-muted">#{{ row.sale.id }}</td>
+                      <td>
+                        <span class="sales-status-text sales-status-pill sales-status-{{ sale_status|replace(' ', '-') }}">
+                          <span class="sales-status-icon" aria-hidden="true">
+                            {% if sale_status == 'cancelled' %}
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                              </svg>
+                            {% elif sale_status == 'processing' %}
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 8v4l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2"/>
+                              </svg>
+                            {% elif sale_status == 'delivered' %}
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                              </svg>
+                            {% else %}
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6 7h12l-1 14H7L6 7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                <path d="M9 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                              </svg>
+                            {% endif %}
+                          </span>
+                          {{ sale_status|capitalize }}
+                        </span>
+                      </td>
+                      <td class="sales-td-end fw-semibold">₱{{ "%.2f"|format(row.sale.total_amount or 0) }}</td>
+                      <td class="sales-td-end text-muted">{{ row.sale.sale_date or "—" }}</td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr><td colspan="4" class="text-center text-muted py-4">No sales orders yet.</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sales-table-footer">
+            <div class="sales-results-text">
+              Showing {{ (1 if sales_total > 0 else 0) }} to {{ (10 if sales_total > 10 else sales_total) }} of {{ sales_total }} results
+            </div>
+            <div class="sales-pagination">
+              <button type="button" class="sales-page-arrow" disabled aria-label="Previous">&lt;</button>
+              <button type="button" class="sales-page-num is-active" aria-label="Page 1">1</button>
+              <button type="button" class="sales-page-arrow" disabled aria-label="Next">&gt;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="top-products-panel" class="admin-main-panel admin-panel" hidden>
+      <div class="admin-main-panel__head">
+        <h2 class="admin-main-panel__title">Top Products Sold</h2>
+      </div>
+      <div class="table-responsive">
+        <table class="table admin-table align-middle">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>ID</th>
+              <th class="text-end">Units Sold</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if top_products and top_products|length > 0 %}
+              {% for row in top_products %}
+              <tr>
+                <td>{{ row.product_name }}</td>
+                <td class="text-muted">#{{ row.product_id }}</td>
+                <td class="text-end fw-semibold">{{ row.units_sold }}</td>
+              </tr>
+              {% endfor %}
+            {% else %}
+            <tr><td colspan="3" class="text-center text-muted py-3">No top product data yet.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+{% include "admin/modals/register_customer_modal.html" %}
+{% include "admin/modals/customer_detail_modal.html" %}
+
+<div class="modal fade purchase-modal" id="purchaseOrderModal" tabindex="-1" aria-labelledby="purchaseOrderModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title h5 mb-0" id="purchaseOrderModalLabel">Create Purchase Order</h3>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="{{ base_url }}/admin/purchase-orders/create?admin={{ is_admin }}&user_id={{ user_id }}&panel=purchase-panel" id="purchaseOrderForm">
+        <div class="modal-body">
+          <div class="po-grid-2">
+            <div>
+              <label class="form-label fw-semibold">Supplier</label>
+              <select name="supplier_id" class="form-select" required>
+                <option value="">-- Select Supplier --</option>
+                {% for s in suppliers %}
+                <option value="{{ s.id }}">{{ s.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="form-label fw-semibold">Cashier ID</label>
+              <input type="text" class="form-control" value="{{ po_cashier_id or '' }}" readonly>
+            </div>
+          </div>
+
+          <div class="po-item-head">
+            <div>Product</div>
+            <div>Qty</div>
+            <div>Unit Cost (₱)</div>
+            <div>Line Total (₱)</div>
+            <div></div>
+          </div>
+
+          <div id="poItemsWrap">
+            <div class="po-item-row">
+              <div>
+                <select name="po_item_product_id[]" class="form-select po-item-product" required>
+                  <option value="">Select product</option>
+                  {% for p in all_products %}
+                  <option value="{{ p.id }}" data-price="{{ p.price or 0 }}">{{ p.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div><input type="number" name="po_item_qty[]" class="form-control po-item-qty" min="1" step="1" value="1" required></div>
+              <div><input type="number" name="po_item_unit_cost[]" class="form-control po-item-unit" min="0" step="0.01" value="0.00" required></div>
+              <div><input type="text" class="form-control po-item-line" value="0.00" readonly></div>
+              <div><button type="button" class="po-remove-item" aria-label="Remove item">x</button></div>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <button type="button" class="btn btn-outline-main" id="poAddItemBtn">+ Add Item</button>
+          </div>
+
+          <div class="po-grand-total">
+            <span class="po-grand-total-label">Grand Total:</span>
+            <span id="poGrandTotal">₱ 0.00</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-po-create">Submit Order</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade product-modal" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title h5 mb-0" id="addProductModalLabel">Add New Product</h3>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{{ base_url }}/add_product?admin={{ is_admin }}&user_id={{ user_id }}&panel=products-panel" method="POST" enctype="multipart/form-data">
+        <div class="modal-body">
+          <input type="hidden" name="admin" value="{{ 'True' if is_admin else 'False' }}">
+          <input type="hidden" name="user_id" value="{{ user_id }}">
+          <div class="product-form-grid-2 mb-3">
+            <div>
+              <label class="form-label">Product Name <span class="required-mark">*</span></label>
+              <input type="text" name="name" class="form-control" placeholder="e.g. Yellow Pad Paper" required>
+            </div>
+            <div>
+              <label class="form-label">SKU <span class="required-mark">*</span></label>
+              <input type="text" class="form-control" placeholder="e.g. YPP-001">
+            </div>
+          </div>
+
+          <div class="product-form-grid-2 mb-3">
+            <div>
+              <label class="form-label">Cost Price <span class="required-mark">*</span></label>
+              <div class="currency-field">
+                <span>₱</span>
+                <input type="number" step="0.01" class="form-control" placeholder="0">
+              </div>
+            </div>
+            <div>
+              <label class="form-label">Selling Price <span class="required-mark">*</span></label>
+              <div class="currency-field">
+                <span>₱</span>
+                <input type="number" step="0.01" name="price" class="form-control" placeholder="0.00" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="product-form-grid-3 mb-3">
+            <div>
+              <label class="form-label">Initial Stock</label>
+              <input type="number" name="stock" class="form-control" value="0" required>
+            </div>
+            <div>
+              <label class="form-label">Reorder Level</label>
+              <input type="number" class="form-control" value="5">
+            </div>
+            <div>
+              <label class="form-label">Unit</label>
+              <input type="text" class="form-control" value="piece">
+            </div>
+          </div>
+
+          <div class="product-form-grid-2 mb-3">
+            <div>
+              <label class="form-label">Category</label>
+              <select name="category" class="form-select" required>
+                <option value="">-- None --</option>
+                {% for cat in product_categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+                {% if not product_categories %}
+                <option value="Keychains">Keychains</option>
+                <option value="Figurines">Figurines</option>
+                <option value="Plushies">Plushies</option>
+                {% endif %}
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Barcode</label>
+              <input type="text" class="form-control" placeholder="Optional">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Brand Name</label>
+            <input type="text" name="brand" class="form-control" placeholder="e.g. Bandai">
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Upload Product Image</label>
+            <div class="product-upload-box">
+              <input type="file" name="image_upload" class="form-control" accept="image/*" required>
+            </div>
+            <div class="form-text">Upload is required. File will be saved to `static/img/products/` automatically.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-main" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-main">Add to Inventory</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title h5 mb-0" id="editProductModalLabel">↺ Adjust Stock</h3>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="editProductForm" method="POST">
+        <div class="modal-body">
+          <input type="hidden" name="admin" value="{{ 'True' if is_admin else 'False' }}">
+          <input type="hidden" name="user_id" value="{{ user_id }}">
+          <div class="mb-2"><label class="form-label">Product Name</label><input id="editProductName" type="text" name="name" class="form-control" required></div>
+          <div class="mb-2"><label class="form-label">Brand</label><input id="editProductBrand" type="text" name="brand" class="form-control" required></div>
+          <div class="mb-2">
+            <label class="form-label">Category</label>
+            <select id="editProductCategory" name="category" class="form-select" required>
+              <option value="Keychains">Keychains</option>
+              <option value="Figurines">Figurines</option>
+              <option value="Plushies">Plushies</option>
+            </select>
+          </div>
+          <div class="mb-2"><label class="form-label">Image Filename</label><input id="editProductImage" type="text" name="image" class="form-control" required></div>
+          <div class="row g-2">
+            <div class="col-12"><label class="form-label">Price</label><input id="editProductPrice" type="number" step="0.01" name="price" class="form-control" required></div>
+          </div>
+          <div class="mt-3">
+            <label class="form-label fw-semibold">Quantity Change</label>
+            <input type="number" name="quantity_change" class="form-control" placeholder="e.g. 50 (restock) or -5 (deduct)">
+            <div class="form-text">Use positive number for restock, negative for deduction.</div>
+          </div>
+          <div class="mt-3">
+            <label class="form-label fw-semibold">Movement Type</label>
+            <select name="movement_type" class="form-select">
+              <option value="Restock">Restock</option>
+              <option value="Deduct">Deduct</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-main" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-main">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script id="customerGraphData" type="application/json">{{ customer_graph_data|safe }}</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  (function () {
+    const clock = document.getElementById("live-clock");
+    if (!clock) return;
+    function tick() {
+      clock.textContent = new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    }
+    tick();
+    window.setInterval(tick, 1000);
+  })();
+
+  (function () {
+    const navLinks = Array.from(document.querySelectorAll(".js-admin-nav"));
+    const panels = Array.from(document.querySelectorAll(".admin-panel"));
+    const topbarTitle = document.getElementById("adminTopbarTitle");
+    const topbarIcon = document.getElementById("adminTopbarIcon");
+    const topbarText = document.getElementById("adminTopbarText");
+    const statsRow = document.querySelector(".admin-stats");
+
+    const panelMeta = {
+      "dashboard-panel": { text: "Dashboard", icon: "icon-dashboard" },
+      "pos-panel": { text: "POS Terminal", icon: "icon-pos" },
+      "products-panel": { text: "Products", icon: "icon-products" },
+      "stock-panel": { text: "Stock Movements", icon: "icon-stock" },
+      "purchase-panel": { text: "Purchase Orders", icon: "icon-purchase" },
+      "sales-panel": { text: "Sales Orders", icon: "icon-sales" },
+      "customers-panel": { text: "Customers", icon: "icon-customers" },
+      "top-products-panel": { text: "Top Products", icon: "icon-products" }
+    };
+
+    function setActivePanel(targetId) {
+      navLinks.forEach(function (link) {
+        const active = link.getAttribute("data-target") === targetId;
+        link.classList.toggle("active", active);
+      });
+      panels.forEach(function (panel) {
+        panel.hidden = panel.id !== targetId;
+      });
+      if (topbarTitle) {
+        const meta = panelMeta[targetId] || panelMeta["dashboard-panel"];
+        if (topbarIcon) topbarIcon.className = "nav-glyph " + meta.icon;
+        if (topbarText) topbarText.textContent = meta.text;
+      }
+      if (statsRow) {
+        statsRow.hidden = targetId !== "dashboard-panel";
+      }
+    }
+
+    navLinks.forEach(function (link) {
+      link.addEventListener("click", function (event) {
+        event.preventDefault();
+        const target = link.getAttribute("data-target");
+        setActivePanel(target);
+        const url = new URL(window.location.href);
+        url.searchParams.set("panel", target);
+        window.history.replaceState({}, "", url.toString());
+      });
+    });
+
+    const url = new URL(window.location.href);
+    const requestedPanel = url.searchParams.get("panel");
+    const defaultPanel = navLinks.length ? navLinks[0].getAttribute("data-target") : "dashboard-panel";
+    const hasRequested = requestedPanel && panels.some(function (p) { return p.id === requestedPanel; });
+    setActivePanel(hasRequested ? requestedPanel : defaultPanel);
+  })();
+
+  (function () {
+    function fmtPeso(n) {
+      const x = parseFloat(n);
+      if (Number.isNaN(x)) return "₱0.00";
+      return "₱" + x.toFixed(2);
+    }
+
+    function showPosSaleCompleteFromUrl() {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get("pos_sale") !== "1") return;
+
+      const saleId = url.searchParams.get("sale_id") || "";
+      const saleDate = (url.searchParams.get("sale_date") || "").replace(/\+/g, " ");
+      const total = url.searchParams.get("total") || "0.00";
+      const tendered = url.searchParams.get("tendered") || "0.00";
+      const changeVal = url.searchParams.get("change") || "0.00";
+      let lines = [];
+      try {
+        const linesRaw = url.searchParams.get("lines");
+        if (linesRaw) lines = JSON.parse(linesRaw);
+      } catch (e) {
+        lines = [];
+      }
+
+      const meta = document.getElementById("posReceiptMeta");
+      const linesEl = document.getElementById("posReceiptLines");
+      if (meta) meta.textContent = "Sale #" + saleId + " · " + saleDate;
+      if (linesEl) {
+        linesEl.innerHTML = "";
+        lines.forEach(function (row) {
+          const div = document.createElement("div");
+          div.className = "pos-receipt-line";
+          const left = document.createElement("span");
+          left.textContent = (row.name || "Item") + " x " + String(row.qty || 0);
+          const right = document.createElement("span");
+          right.textContent = fmtPeso(row.line);
+          div.appendChild(left);
+          div.appendChild(right);
+          linesEl.appendChild(div);
+        });
+      }
+
+      const subEl = document.getElementById("posReceiptSubtotal");
+      const totEl = document.getElementById("posReceiptTotal");
+      const tenEl = document.getElementById("posReceiptTendered");
+      const chEl = document.getElementById("posReceiptChange");
+      if (subEl) subEl.textContent = fmtPeso(total);
+      if (totEl) totEl.textContent = fmtPeso(total);
+      if (tenEl) tenEl.textContent = fmtPeso(tendered);
+      if (chEl) chEl.textContent = fmtPeso(changeVal);
+
+      const modalEl = document.getElementById("posSaleCompleteModal");
+      if (modalEl && typeof bootstrap !== "undefined" && bootstrap.Modal) {
+        new bootstrap.Modal(modalEl).show();
+      }
+
+      url.searchParams.delete("pos_sale");
+      url.searchParams.delete("sale_id");
+      url.searchParams.delete("sale_date");
+      url.searchParams.delete("total");
+      url.searchParams.delete("tendered");
+      url.searchParams.delete("change");
+      url.searchParams.delete("lines");
+      window.history.replaceState({}, "", url.toString());
+    }
+
+    window.addEventListener("load", showPosSaleCompleteFromUrl);
+  })();
+
+  (function () {
+    const searchInput = document.getElementById("posSearchInput");
+    const categoryFilter = document.getElementById("posCategoryFilter");
+    const cards = Array.from(document.querySelectorAll("#posProductGrid form"));
+    const pagination = document.querySelector(".pos-pagination");
+    if (!searchInput || !categoryFilter || !cards.length || !pagination) return;
+
+    const prevBtn = pagination.querySelector(".pos-page-arrow:first-child");
+    const nextBtn = pagination.querySelector(".pos-page-arrow:last-child");
+    const pageBtns = Array.from(pagination.querySelectorAll(".pos-page-num"));
+    if (!prevBtn || !nextBtn || !pageBtns.length) return;
+
+    const pageSize = 9;
+    let currentPage = 1;
+
+    function getFilteredCards() {
+      const q = (searchInput.value || "").trim().toLowerCase();
+      const cat = (categoryFilter.value || "").trim().toLowerCase();
+      return cards.filter(function (card) {
+        const name = card.getAttribute("data-pos-name") || "";
+        const category = card.getAttribute("data-pos-category") || "";
+        const matchName = !q || name.includes(q);
+        const matchCat = !cat || category === cat;
+        return matchName && matchCat;
+      });
+    }
+
+    function renderPosPage() {
+      const filtered = getFilteredCards();
+      const total = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      cards.forEach(function (card) { card.hidden = true; });
+      filtered.slice(start, end).forEach(function (card) { card.hidden = false; });
+
+      const startPage = Math.max(1, Math.min(currentPage - 1, totalPages - pageBtns.length + 1));
+      pageBtns.forEach(function (btn, idx) {
+        const page = startPage + idx;
+        const visible = page <= totalPages;
+        btn.hidden = !visible;
+        if (visible) {
+          btn.textContent = String(page);
+          btn.setAttribute("aria-label", "Page " + String(page));
+          btn.dataset.page = String(page);
+        }
+        btn.classList.toggle("is-active", visible && page === currentPage);
+      });
+
+      prevBtn.disabled = currentPage <= 1 || total === 0;
+      nextBtn.disabled = currentPage >= totalPages || total === 0;
+    }
+
+    pageBtns.forEach(function (btn, idx) {
+      btn.addEventListener("click", function () {
+        const targetPage = Number(btn.dataset.page || (idx + 1));
+        currentPage = targetPage;
+        renderPosPage();
+      });
+    });
+
+    prevBtn.addEventListener("click", function () {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        renderPosPage();
+      }
+    });
+
+    nextBtn.addEventListener("click", function () {
+      const totalPages = Math.max(1, Math.ceil(getFilteredCards().length / pageSize));
+      if (currentPage < totalPages) {
+        currentPage += 1;
+        renderPosPage();
+      }
+    });
+
+    searchInput.addEventListener("input", function () {
+      currentPage = 1;
+      renderPosPage();
+    });
+    categoryFilter.addEventListener("change", function () {
+      currentPage = 1;
+      renderPosPage();
+    });
+
+    renderPosPage();
+  })();
+
+  (function () {
+    const searchInput = document.getElementById("productsSearchInput");
+    const categoryFilter = document.getElementById("productsCategoryFilter");
+    const rows = Array.from(document.querySelectorAll("#productsDataTable tbody tr"));
+    const prevBtn = document.querySelector(".products-pagination .products-page-arrow:first-child");
+    const nextBtn = document.querySelector(".products-pagination .products-page-arrow:last-child");
+    const pageBtn = document.querySelector(".products-pagination .products-page-num");
+    const resultsText = document.querySelector(".products-results-text");
+    if (!searchInput || !categoryFilter || !rows.length || !prevBtn || !nextBtn || !pageBtn || !resultsText) return;
+
+    const pageSize = 10;
+    let currentPage = 1;
+
+    function getFilteredRows() {
+      const q = (searchInput.value || "").trim().toLowerCase();
+      const cat = (categoryFilter.value || "").trim().toLowerCase();
+      return rows.filter(function (row) {
+        const name = row.getAttribute("data-product-name") || "";
+        const sku = row.getAttribute("data-product-sku") || "";
+        const category = row.getAttribute("data-product-category") || "";
+        const matchSearch = !q || name.includes(q) || sku.includes(q);
+        const matchCategory = !cat || category === cat;
+        return matchSearch && matchCategory;
+      });
+    }
+
+    function renderProductsPage() {
+      const filtered = getFilteredRows();
+      const total = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+
+      rows.forEach(function (row) { row.hidden = true; });
+      filtered.slice(start, end).forEach(function (row) { row.hidden = false; });
+
+      const from = total === 0 ? 0 : start + 1;
+      const to = total === 0 ? 0 : Math.min(end, total);
+      resultsText.textContent = "Showing " + from + " to " + to + " of " + total + " results";
+
+      pageBtn.textContent = String(currentPage);
+      pageBtn.setAttribute("aria-label", "Page " + String(currentPage));
+      prevBtn.disabled = currentPage <= 1 || total === 0;
+      nextBtn.disabled = currentPage >= totalPages || total === 0;
+    }
+
+    searchInput.addEventListener("input", function () {
+      currentPage = 1;
+      renderProductsPage();
+    });
+    categoryFilter.addEventListener("change", function () {
+      currentPage = 1;
+      renderProductsPage();
+    });
+    prevBtn.addEventListener("click", function () {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        renderProductsPage();
+      }
+    });
+    nextBtn.addEventListener("click", function () {
+      const totalPages = Math.max(1, Math.ceil(getFilteredRows().length / pageSize));
+      if (currentPage < totalPages) {
+        currentPage += 1;
+        renderProductsPage();
+      }
+    });
+
+    renderProductsPage();
+  })();
+
+  (function () {
+    const searchInput = document.getElementById("stockSearchInput");
+    const typeFilter = document.getElementById("stockTypeFilter");
+    const rows = Array.from(document.querySelectorAll("#stockDataTable tbody tr"));
+    const dataRows = rows.filter(function (row) { return row.hasAttribute("data-stock-text"); });
+    const emptyRow = rows.find(function (row) { return !row.hasAttribute("data-stock-text"); }) || null;
+    const prevBtn = document.querySelector(".stock-pagination .stock-page-arrow:first-child");
+    const nextBtn = document.querySelector(".stock-pagination .stock-page-arrow:last-child");
+    const pageBtn = document.querySelector(".stock-pagination .stock-page-num");
+    const resultsText = document.querySelector(".stock-results-text");
+    if (!searchInput || !typeFilter || !prevBtn || !nextBtn || !pageBtn || !resultsText) return;
+
+    const pageSize = 10;
+    let currentPage = 1;
+
+    function getFilteredRows() {
+      const q = (searchInput.value || "").trim().toLowerCase();
+      const t = (typeFilter.value || "").trim().toLowerCase();
+      return dataRows.filter(function (row) {
+        const type = row.getAttribute("data-stock-type") || "";
+        const text = row.getAttribute("data-stock-text") || "";
+        const matchSearch = !q || text.includes(q);
+        const matchType = !t || type === t;
+        return matchSearch && matchType;
+      });
+    }
+
+    function renderStockPage() {
+      const filtered = getFilteredRows();
+      const total = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+
+      dataRows.forEach(function (row) { row.hidden = true; });
+      filtered.slice(start, end).forEach(function (row) { row.hidden = false; });
+      if (emptyRow) emptyRow.hidden = total > 0;
+
+      const from = total === 0 ? 0 : start + 1;
+      const to = total === 0 ? 0 : Math.min(end, total);
+      resultsText.textContent = "Showing " + from + " to " + to + " of " + total + " results";
+
+      pageBtn.textContent = String(currentPage);
+      pageBtn.setAttribute("aria-label", "Page " + String(currentPage));
+      prevBtn.disabled = currentPage <= 1 || total === 0;
+      nextBtn.disabled = currentPage >= totalPages || total === 0;
+    }
+
+    searchInput.addEventListener("input", function () {
+      currentPage = 1;
+      renderStockPage();
+    });
+    typeFilter.addEventListener("change", function () {
+      currentPage = 1;
+      renderStockPage();
+    });
+    prevBtn.addEventListener("click", function () {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        renderStockPage();
+      }
+    });
+    nextBtn.addEventListener("click", function () {
+      const totalPages = Math.max(1, Math.ceil(getFilteredRows().length / pageSize));
+      if (currentPage < totalPages) {
+        currentPage += 1;
+        renderStockPage();
+      }
+    });
+
+    renderStockPage();
+  })();
+
+  (function () {
+    const searchInput = document.getElementById("purchaseSearchInput");
+    const rows = Array.from(document.querySelectorAll("#purchaseDataTable tbody tr"));
+    const dataRows = rows.filter(function (row) { return row.hasAttribute("data-purchase-text"); });
+    const emptyRow = rows.find(function (row) { return !row.hasAttribute("data-purchase-text"); }) || null;
+    const prevBtn = document.querySelector(".purchase-pagination .purchase-page-arrow:first-child");
+    const nextBtn = document.querySelector(".purchase-pagination .purchase-page-arrow:last-child");
+    const pageBtn = document.querySelector(".purchase-pagination .purchase-page-num");
+    const resultsText = document.querySelector(".purchase-results-text");
+    if (!searchInput || !prevBtn || !nextBtn || !pageBtn || !resultsText) return;
+
+    const pageSize = 10;
+    let currentPage = 1;
+
+    function getFilteredRows() {
+      const q = (searchInput.value || "").trim().toLowerCase();
+      return dataRows.filter(function (row) {
+        const text = row.getAttribute("data-purchase-text") || "";
+        return !q || text.includes(q);
+      });
+    }
+
+    function renderPurchasePage() {
+      const filtered = getFilteredRows();
+      const total = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+
+      dataRows.forEach(function (row) { row.hidden = true; });
+      filtered.slice(start, end).forEach(function (row) { row.hidden = false; });
+      if (emptyRow) emptyRow.hidden = total > 0;
+
+      const from = total === 0 ? 0 : start + 1;
+      const to = total === 0 ? 0 : Math.min(end, total);
+      resultsText.textContent = "Showing " + from + " to " + to + " of " + total + " results";
+
+      pageBtn.textContent = String(currentPage);
+      pageBtn.setAttribute("aria-label", "Page " + String(currentPage));
+      prevBtn.disabled = currentPage <= 1 || total === 0;
+      nextBtn.disabled = currentPage >= totalPages || total === 0;
+    }
+
+    searchInput.addEventListener("input", function () {
+      currentPage = 1;
+      renderPurchasePage();
+    });
+    prevBtn.addEventListener("click", function () {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        renderPurchasePage();
+      }
+    });
+    nextBtn.addEventListener("click", function () {
+      const totalPages = Math.max(1, Math.ceil(getFilteredRows().length / pageSize));
+      if (currentPage < totalPages) {
+        currentPage += 1;
+        renderPurchasePage();
+      }
+    });
+
+    renderPurchasePage();
+  })();
+
+  (function () {
+    const searchInput = document.getElementById("customersSearchInput");
+    const rows = Array.from(document.querySelectorAll("#customersDataTable tbody tr"));
+    if (!searchInput || !rows.length) return;
+
+    function applyCustomerFilters() {
+      const q = (searchInput.value || "").trim().toLowerCase();
+      rows.forEach(function (row) {
+        const text = row.getAttribute("data-customer-text") || "";
+        row.hidden = !!q && !text.includes(q);
+      });
+    }
+
+    searchInput.addEventListener("input", applyCustomerFilters);
+    applyCustomerFilters();
+  })();
+
+  (function () {
+    if (typeof Chart === "undefined") return;
+    const dataNode = document.getElementById("customerGraphData");
+    if (!dataNode) return;
+    let data = null;
+    try {
+      data = JSON.parse(dataNode.textContent || "{}");
+    } catch (e) {
+      return;
+    }
+    if (!data || !data.totals) return;
+    const topLabels = (data.top_customers && data.top_customers.labels) || [];
+    const topValues = (data.top_customers && data.top_customers.values) || [];
+    const distributionLabels = (data.distribution && data.distribution.labels) || [];
+    const distributionValues = (data.distribution && data.distribution.values) || [];
+
+    const segmentsEl = document.getElementById("customerSegmentsValue");
+    const topValueEl = document.getElementById("customerTopValue");
+    const trendEl = document.getElementById("customerTrendValue");
+    // customerKpiValue removed (Customer KPI Mix card deleted)
+    if (segmentsEl) segmentsEl.textContent = String(data.totals.total_customers || 0) + " customers";
+    // topValueEl intentionally unused after removing the old "Top Customer Points" chart
+    if (trendEl) trendEl.textContent = "Top " + String(topLabels.length || 0) + " ranks";
+
+    const topCustomersDetails = Array.isArray(data.top_customers_details) ? data.top_customers_details : [];
+    const modalEl = document.getElementById("customerDetailModal");
+    const modal = (modalEl && typeof bootstrap !== "undefined" && bootstrap.Modal) ? new bootstrap.Modal(modalEl) : null;
+
+    function showCustomerDetail(customer, rank) {
+      if (!modalEl || !customer) return;
+      const nameEl = document.getElementById("customerDetailName");
+      const metaEl = document.getElementById("customerDetailMeta");
+      const emailEl = document.getElementById("customerDetailEmail");
+      const phoneEl = document.getElementById("customerDetailPhone");
+      const pointsEl = document.getElementById("customerDetailPoints");
+      const rankEl = document.getElementById("customerDetailRank");
+
+      if (nameEl) nameEl.textContent = customer.name || "—";
+      if (metaEl) metaEl.textContent = "Customer #" + (customer.id || "—");
+      if (emailEl) emailEl.textContent = customer.email || "—";
+      if (phoneEl) phoneEl.textContent = customer.phone || "—";
+      if (pointsEl) pointsEl.textContent = String(customer.points || 0) + " pts";
+      if (rankEl) rankEl.textContent = "Rank " + String(rank || 0);
+
+      if (modal) modal.show();
+    }
+
+    function renderLeaderboard(listEl, maxRows) {
+      if (!listEl) return;
+      listEl.innerHTML = "";
+      const rows = topCustomersDetails.slice(0, maxRows);
+      rows.forEach(function (c, idx) {
+        const rank = idx + 1;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "customer-leaderboard-item";
+
+        const left = document.createElement("div");
+        left.className = "customer-leaderboard-left";
+
+        const rankPill = document.createElement("div");
+        rankPill.className = "customer-leaderboard-rank";
+        rankPill.textContent = String(rank);
+
+        const name = document.createElement("div");
+        name.className = "customer-leaderboard-name";
+        name.textContent = c.name || "—";
+
+        left.appendChild(rankPill);
+        left.appendChild(name);
+
+        const points = document.createElement("div");
+        points.className = "customer-leaderboard-points";
+        points.textContent = (c.points || 0) + " pts";
+
+        btn.appendChild(left);
+        btn.appendChild(points);
+
+        btn.addEventListener("click", function () {
+          showCustomerDetail(c, rank);
+        });
+
+        listEl.appendChild(btn);
+      });
+    }
+
+    renderLeaderboard(document.getElementById("topPointsLeaderboard"), 5);
+
+    const commonPlugins = {
+      legend: { labels: { boxWidth: 10, boxHeight: 10, color: "#475569", font: { size: 10 } } }
+    };
+
+    const segmentChartEl = document.getElementById("customerTotalChart");
+    if (segmentChartEl) {
+      new Chart(segmentChartEl, {
+        type: "doughnut",
+        data: {
+          labels: distributionLabels,
+          datasets: [{
+            data: distributionValues,
+            backgroundColor: ["#7c5ac8", "#60a5fa", "#2dd4bf", "#f59e0b"],
+            borderWidth: 0,
+            radius: "92%"
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          aspectRatio: 1,
+          cutout: "66%",
+          layout: { padding: { top: 4, right: 4, bottom: 6, left: 4 } },
+          plugins: {
+            legend: {
+              position: "bottom",
+              align: "center",
+              labels: {
+                boxWidth: 10,
+                boxHeight: 10,
+                color: "#475569",
+                font: { size: 9.5 },
+                padding: 12
+              }
+            }
+          }
+        }
+      });
+    }
+
+    const trendChartEl = document.getElementById("customerAverageChart");
+    if (trendChartEl) {
+      const rankLabels = topValues.map(function (_, idx) { return String(idx + 1); });
+      new Chart(trendChartEl, {
+        type: "line",
+        data: {
+          labels: rankLabels,
+          datasets: [{
+            data: topValues,
+            borderColor: "#2dd4bf",
+            backgroundColor: "rgba(45, 212, 191, 0.18)",
+            pointBackgroundColor: "#14b8a6",
+            pointRadius: 3,
+            fill: true,
+            tension: 0.35
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: function () { return ""; },
+                label: function (context) {
+                  const idx = context.dataIndex || 0;
+                  const name = topLabels[idx] || "";
+                  const pts = context.parsed.y || 0;
+                  return (name ? (name + ": ") : "") + String(pts) + " pts";
+                }
+              }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: "#64748b", font: { size: 10 } } },
+            y: { beginAtZero: true, ticks: { precision: 0, color: "#64748b", font: { size: 10 } }, grid: { color: "#e2e8f0" } }
+          }
+        }
+      });
+    }
+
+    // kpiChartEl intentionally removed after replacing "Customer KPI Mix" chart with leaderboard list
+  })();
+
+  (function () {
+    const searchInput = document.getElementById("salesSearchInput");
+    const statusFilter = document.getElementById("salesStatusFilter");
+    const rows = Array.from(document.querySelectorAll("#salesDataTable tbody tr"));
+    const dataRows = rows.filter(function (row) { return row.hasAttribute("data-sales-text"); });
+    const emptyRow = rows.find(function (row) { return !row.hasAttribute("data-sales-text"); }) || null;
+    const prevBtn = document.querySelector(".sales-pagination .sales-page-arrow:first-child");
+    const nextBtn = document.querySelector(".sales-pagination .sales-page-arrow:last-child");
+    const pageBtn = document.querySelector(".sales-pagination .sales-page-num");
+    const resultsText = document.querySelector(".sales-results-text");
+    if (!searchInput || !statusFilter || !prevBtn || !nextBtn || !pageBtn || !resultsText) return;
+
+    const pageSize = 10;
+    let currentPage = 1;
+
+    function getFilteredRows() {
+      const q = (searchInput.value || "").trim().toLowerCase();
+      const status = (statusFilter.value || "").trim().toLowerCase();
+      return dataRows.filter(function (row) {
+        const text = row.getAttribute("data-sales-text") || "";
+        const rowStatus = (row.getAttribute("data-sales-status") || "").toLowerCase();
+        const matchSearch = !q || text.includes(q);
+        const matchStatus = !status || rowStatus === status;
+        return matchSearch && matchStatus;
+      });
+    }
+
+    function renderSalesPage() {
+      const filtered = getFilteredRows();
+      const total = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+
+      dataRows.forEach(function (row) { row.hidden = true; });
+      filtered.slice(start, end).forEach(function (row) { row.hidden = false; });
+      if (emptyRow) emptyRow.hidden = total > 0;
+
+      const from = total === 0 ? 0 : start + 1;
+      const to = total === 0 ? 0 : Math.min(end, total);
+      resultsText.textContent = "Showing " + from + " to " + to + " of " + total + " results";
+
+      pageBtn.textContent = String(currentPage);
+      pageBtn.setAttribute("aria-label", "Page " + String(currentPage));
+      prevBtn.disabled = currentPage <= 1 || total === 0;
+      nextBtn.disabled = currentPage >= totalPages || total === 0;
+    }
+
+    searchInput.addEventListener("input", function () {
+      currentPage = 1;
+      renderSalesPage();
+    });
+    statusFilter.addEventListener("change", function () {
+      currentPage = 1;
+      renderSalesPage();
+    });
+    prevBtn.addEventListener("click", function () {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        renderSalesPage();
+      }
+    });
+    nextBtn.addEventListener("click", function () {
+      const totalPages = Math.max(1, Math.ceil(getFilteredRows().length / pageSize));
+      if (currentPage < totalPages) {
+        currentPage += 1;
+        renderSalesPage();
+      }
+    });
+
+    renderSalesPage();
+  })();
+
+  (function () {
+    const wrap = document.getElementById("poItemsWrap");
+    const addBtn = document.getElementById("poAddItemBtn");
+    const grandTotalEl = document.getElementById("poGrandTotal");
+    if (!wrap || !addBtn || !grandTotalEl) return;
+
+    function updateTotals() {
+      let grand = 0;
+      const rows = Array.from(wrap.querySelectorAll(".po-item-row"));
+      rows.forEach(function (row) {
+        const qty = Number((row.querySelector(".po-item-qty") || {}).value || 0);
+        const unit = Number((row.querySelector(".po-item-unit") || {}).value || 0);
+        const line = qty * unit;
+        const lineInput = row.querySelector(".po-item-line");
+        if (lineInput) lineInput.value = line.toFixed(2);
+        grand += line;
+      });
+      grandTotalEl.textContent = "₱ " + grand.toFixed(2);
+    }
+
+    function attachRowEvents(row) {
+      const qty = row.querySelector(".po-item-qty");
+      const unit = row.querySelector(".po-item-unit");
+      const product = row.querySelector(".po-item-product");
+      const remove = row.querySelector(".po-remove-item");
+      if (qty) qty.addEventListener("input", updateTotals);
+      if (unit) unit.addEventListener("input", updateTotals);
+      if (product) {
+        product.addEventListener("change", function () {
+          const selected = product.options[product.selectedIndex];
+          const price = Number((selected && selected.getAttribute("data-price")) || 0);
+          if (unit && !unit.value) unit.value = price.toFixed(2);
+          updateTotals();
+        });
+      }
+      if (remove) {
+        remove.addEventListener("click", function () {
+          const rows = wrap.querySelectorAll(".po-item-row");
+          if (rows.length <= 1) {
+            row.querySelector(".po-item-product").value = "";
+            row.querySelector(".po-item-qty").value = "1";
+            row.querySelector(".po-item-unit").value = "0.00";
+          } else {
+            row.remove();
+          }
+          updateTotals();
+        });
+      }
+    }
+
+    addBtn.addEventListener("click", function () {
+      const first = wrap.querySelector(".po-item-row");
+      if (!first) return;
+      const clone = first.cloneNode(true);
+      const select = clone.querySelector(".po-item-product");
+      const qty = clone.querySelector(".po-item-qty");
+      const unit = clone.querySelector(".po-item-unit");
+      const line = clone.querySelector(".po-item-line");
+      if (select) select.value = "";
+      if (qty) qty.value = "1";
+      if (unit) unit.value = "0.00";
+      if (line) line.value = "0.00";
+      wrap.appendChild(clone);
+      attachRowEvents(clone);
+      updateTotals();
+    });
+
+    Array.from(wrap.querySelectorAll(".po-item-row")).forEach(attachRowEvents);
+    updateTotals();
+  })();
+
+  (function () {
+    const modal = document.getElementById("editProductModal");
+    const form = document.getElementById("editProductForm");
+    if (!modal || !form) return;
+    const fields = {
+      name: document.getElementById("editProductName"),
+      brand: document.getElementById("editProductBrand"),
+      category: document.getElementById("editProductCategory"),
+      image: document.getElementById("editProductImage"),
+      price: document.getElementById("editProductPrice")
+    };
+    modal.addEventListener("show.bs.modal", function (event) {
+      const trigger = event.relatedTarget;
+      if (!trigger) return;
+      const id = trigger.getAttribute("data-id");
+      form.action = "{{ base_url }}/edit/" + id + "?admin={{ is_admin }}&user_id={{ user_id }}&panel=products-panel";
+      fields.name.value = trigger.getAttribute("data-name") || "";
+      fields.brand.value = trigger.getAttribute("data-brand") || "";
+      fields.category.value = trigger.getAttribute("data-category") || "";
+      fields.image.value = trigger.getAttribute("data-image") || "";
+      fields.price.value = trigger.getAttribute("data-price") || "0";
+    });
+  })();
+</script>
+{% endblock %}

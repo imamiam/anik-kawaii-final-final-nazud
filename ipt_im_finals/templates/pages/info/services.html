@@ -1,0 +1,42 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<style>
+    .service-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.1rem;
+        height: 100%;
+    }
+
+    .service-card p {
+        color: var(--text-muted);
+        margin-bottom: 0;
+    }
+</style>
+
+<div class="page-panel p-5 text-center">
+    <h2 class="section-title h3">Our Services</h2>
+    <p class="section-subtitle">Store support services for a smoother customer journey.</p>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="service-card">
+                <h5 class="fw-bold">Product Guidance</h5>
+                <p class="small">Recommendations based on category, brand, and budget preference.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="service-card">
+                <h5 class="fw-bold">Order Assistance</h5>
+                <p class="small">Help with account support, product updates, and order concerns.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="service-card">
+                <h5 class="fw-bold">After-Sales Care</h5>
+                <p class="small">Clear follow-up support to maintain customer confidence.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

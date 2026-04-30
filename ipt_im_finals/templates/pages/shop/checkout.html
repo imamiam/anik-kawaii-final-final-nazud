@@ -1,0 +1,230 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+<style>
+    .checkout-shell {
+        max-width: 980px;
+        margin: 0 auto;
+    }
+
+    .checkout-card {
+        background: #ffffff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    .checkout-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+
+    .checkout-subtitle {
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .checkout-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 1rem;
+    }
+
+    .checkout-section {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.9rem;
+        background: #ffffff;
+    }
+
+    .checkout-section h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.8rem;
+    }
+
+    .checkout-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.55rem 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.94rem;
+    }
+
+    .checkout-item:last-child {
+        border-bottom: 0;
+    }
+
+    .checkout-summary {
+        margin-top: 0.7rem;
+        border-top: 1px solid var(--border);
+        padding-top: 0.7rem;
+    }
+
+    .checkout-summary-line {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.35rem;
+        color: var(--text-muted);
+        font-size: 0.92rem;
+    }
+
+    .checkout-summary-total {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        margin-top: 0.6rem;
+    }
+
+    .checkout-summary-total strong:last-child {
+        color: var(--primary);
+        font-size: 1.15rem;
+    }
+
+    .checkout-actions {
+        margin-top: 0.9rem;
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        
+    }
+
+    .loyalty-box {
+        background: var(--primary-soft);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.75rem;
+    }
+
+    .loyalty-points {
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .checkout-empty {
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+
+    @media (max-width: 991.98px) {
+        .checkout-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="checkout-shell py-2 py-lg-3">
+    <div class="checkout-card">
+        <h2 class="checkout-title">Checkout</h2>
+        <p class="checkout-subtitle">Review your details and order summary before placing your order.</p>
+        {% if error %}
+        <div class="alert alert-danger py-2">{{ error }}</div>
+        {% endif %}
+
+        {% if items %}
+        <form method="post" action="{{ base_url }}/checkout">
+            <input type="hidden" name="admin" value="{{ is_admin }}">
+            <input type="hidden" name="user_id" value="{{ user_id }}">
+            <div class="checkout-grid">
+                <div class="checkout-section">
+                    <h3>Shipping Details</h3>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" name="full_name" class="form-control" placeholder="Enter your full name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" name="phone" class="form-control" placeholder="09XXXXXXXXX" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Delivery Address</label>
+                            <textarea name="address" class="form-control" rows="3" placeholder="House number, street, barangay, city" required></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Payment Method</label>
+                            <select name="payment_method" class="form-select">
+                                <option selected>Cash on Delivery</option>
+                                <option>GCash</option>
+                                <option>Card</option>
+                            </select>
+                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Discount (optional)</label>
+                        <select name="discount_id" class="form-select">
+                            <option value="">No discount</option>
+                            {% for d in discounts %}
+                            <option value="{{ d.id }}" {% if selected_discount_id == (d.id|string) %}selected{% endif %}>
+                                {{ d.name }} ({{ d.type }}: {{ d.value }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <div class="loyalty-box">
+                            <div class="loyalty-points">Available Loyalty Points: {{ available_points or 0 }}</div>
+                            <label class="form-label mb-1">Redeem Points (1 point = ₱1)</label>
+                            <input
+                                type="number"
+                                min="0"
+                                max="{{ available_points or 0 }}"
+                                name="points_to_redeem"
+                                class="form-control"
+                                value="{{ points_to_redeem or 0 }}">
+                            <small class="text-muted">You earn 1 point for every ₱100 spent.</small>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <div class="checkout-section">
+                    <h3>Order Summary</h3>
+                    {% for row in items %}
+                    <div class="checkout-item">
+                        <span>{{ row.product.name }} x {{ row.item.quantity }}</span>
+                        <strong>₱{{ "{:,.2f}".format(row.subtotal) }}</strong>
+                    </div>
+                    {% endfor %}
+                    <div class="checkout-summary">
+                        <div class="checkout-summary-line">
+                            <span>Subtotal</span>
+                        <span>₱{{ "{:,.2f}".format(subtotal or 0) }}</span>
+                        </div>
+                        <div class="checkout-summary-line">
+                        <span>Discount</span>
+                        <span>- ₱{{ "{:,.2f}".format(discount_amount or 0) }}</span>
+                        </div>
+                        <div class="checkout-summary-line">
+                        <span>Loyalty Redeemed</span>
+                        <span>- ₱{{ "{:,.2f}".format(points_redeemed_value or 0) }}</span>
+                        </div>
+                        <div class="checkout-summary-total">
+                            <strong>Total</strong>
+                            <strong>₱{{ "{:,.2f}".format(total) }}</strong>
+                        </div>
+                        <div class="checkout-summary-line mt-2 mb-0">
+                            <span>Points to Earn</span>
+                            <span>+{{ points_earned_preview or 0 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkout-actions">
+                <a href="{{ base_url }}/cart?admin={{ is_admin }}&user_id={{ user_id }}" class="btn btn-outline-main">Back to Cart</a>
+                <button type="submit" class="btn btn-main">Place Order</button>
+            </div>
+        </form>
+        {% else %}
+        <div class="checkout-empty">
+            <h5 class="mb-2">Your cart is empty</h5>
+            <p class="text-muted mb-3">Add products first before proceeding to checkout.</p>
+            <a href="{{ base_url }}/products?admin={{ is_admin }}&user_id={{ user_id }}" class="btn btn-main">Browse Products</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

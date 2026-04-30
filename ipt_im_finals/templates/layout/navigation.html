@@ -1,0 +1,112 @@
+<nav class="navbar navbar-expand-lg navbar-light sticky-top">
+  <div class="container nav-shell">
+    <a class="navbar-brand fw-bold" href="{{ base_url }}/?admin={{ is_admin }}&user_id={{ user_id }}">
+      <span class="brand-lockup">
+        <span class="brand-kizuna">Kizuna</span>
+        <span class="brand-collections">Collections</span>
+      </span>
+    </a>
+    
+    <button class="navbar-toggler border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse nav-collapse" id="navbarNav">
+      
+      <ul class="navbar-nav ms-auto align-items-lg-center nav-primary-links">
+        <li class="nav-item">
+          <a class="nav-link nav-link-custom {% if current_path == '/' %}active{% endif %}" href="{{ base_url }}/?admin={{ is_admin }}&user_id={{ user_id }}">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-link-custom {% if current_path.startswith('/products') %}active{% endif %}" href="{{ base_url }}/products?admin={{ is_admin }}&user_id={{ user_id }}">Products</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-link-custom {% if current_path.startswith('/thecompany') %}active{% endif %}" href="{{ base_url }}/thecompany?admin={{ is_admin }}&user_id={{ user_id }}">About</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-link-custom {% if current_path.startswith('/contactus') %}active{% endif %}" href="{{ base_url }}/contactus?admin={{ is_admin }}&user_id={{ user_id }}">Contact</a>
+        </li>
+      </ul>
+        
+      <form class="d-flex nav-search-wrap" role="search" method="get" action="{{ base_url }}/products">
+        <input type="hidden" name="admin" value="{{ is_admin }}">
+        <input type="hidden" name="user_id" value="{{ user_id }}">
+        <input class="search-input" type="search" name="search" value="{{ search_term }}" placeholder="Search products" aria-label="Search products">
+      </form>
+
+      <ul class="navbar-nav align-items-lg-center nav-tool-links">
+        {% if not is_admin %}
+        <li class="nav-item">
+          <a class="nav-link nav-link-custom cart-link" href="{% if user_id %}{{ base_url }}/cart?admin={{ is_admin }}&user_id={{ user_id }}{% else %}{{ base_url }}/login{% endif %}" aria-label="Cart">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-hidden="true">
+              <circle cx="9" cy="20" r="1"></circle>
+              <circle cx="18" cy="20" r="1"></circle>
+              <path d="M1 1h4l2.68 12.39a2 2 0 0 0 2 1.61h7.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            {% if user_id and cart_count and cart_count > 0 %}
+              <span class="cart-badge" aria-label="{{ cart_count }} items in cart">{{ cart_count }}</span>
+            {% endif %}
+          </a>
+        </li>
+        {% if user_id %}
+        <li class="nav-item d-flex align-items-lg-center nav-loyalty-item">
+          <span class="nav-loyalty-pill" role="status" title="Earn 1 point per ₱100 spent at checkout or in-store when your account is linked to the sale" aria-label="You have {{ current_loyalty_points or 0 }} loyalty points">
+            <span class="loyalty-star" aria-hidden="true">★</span>
+            <span>{{ current_loyalty_points or 0 }} pts</span>
+          </span>
+        </li>
+        {% endif %}
+        {% endif %}
+        {% if not user_id %}
+        <li class="nav-item">
+          <a class="nav-link nav-link-custom {% if current_path.startswith('/login') %}active{% endif %}" href="{{ base_url }}/login">Login</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="btn btn-outline-main nav-register-btn {% if current_path.startswith('/register') %}active{% endif %}" href="{{ base_url }}/register">Register</a>
+        </li>
+        {% else %}
+        {% if is_admin %}
+        <li class="nav-item">
+          <a class="btn btn-outline-main nav-logout-btn" href="{{ base_url }}/logout">Logout</a>
+        </li>
+        {% else %}
+        <li class="nav-item dropdown d-flex align-items-center gap-2 nav-user-chip">
+          <a
+            class="user-role-chip admin-chip-trigger dropdown-toggle"
+            href="#"
+            role="button"
+            id="userMenu"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            aria-label="Customer account menu"
+            style="text-decoration:none;"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-hidden="true">
+              <path d="M20 21a8 8 0 0 0-16 0"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span class="fw-semibold">My Account</span>
+          </a>
+
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+            <li><h6 class="dropdown-header">{{ current_user_name }}</h6></li>
+            <li><p class="dropdown-loyalty-blurb mb-0"><strong>Loyalty balance:</strong><br>{{ current_loyalty_points or 0 }} points</p></li>
+            <li>
+              <a class="dropdown-item {% if current_path.startswith('/orders') %}active{% endif %}" href="{{ base_url }}/orders?admin={{ is_admin }}&user_id={{ user_id }}">
+                My Orders
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item dropdown-item-logout" href="{{ base_url }}/logout">Logout</a>
+            </li>
+          </ul>
+        </li>
+        {% endif %}
+
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>

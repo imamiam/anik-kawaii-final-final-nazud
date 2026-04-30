@@ -1,0 +1,216 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+<style>
+    .orders-wrap {
+        max-width: 920px;
+        margin: 0 auto;
+    }
+
+    .order-card {
+        border: 1px solid #ece8f6;
+        border-radius: 14px;
+        background: #ffffff;
+        padding: 1rem 1.1rem;
+        box-shadow: 0 6px 18px rgba(27, 20, 57, 0.05);
+    }
+
+    .order-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.9rem;
+        flex-wrap: wrap;
+        border-bottom: 1px solid #f0edf8;
+        padding-bottom: 0.8rem;
+        margin-bottom: 0.7rem;
+    }
+
+    .order-id {
+        font-weight: 700;
+        font-size: 1.06rem;
+        color: #2f2552;
+    }
+
+    .order-meta {
+        color: var(--text-muted);
+        font-size: 0.88rem;
+        margin: 0;
+    }
+
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px dashed #ece8f6;
+        font-size: 0.95rem;
+    }
+
+    .order-item:last-child {
+        border-bottom: 0;
+    }
+
+    .order-item-name {
+        color: #2c2348;
+    }
+
+    .order-item-qty {
+        color: var(--text-muted);
+        font-size: 0.86rem;
+        margin-left: 0.2rem;
+    }
+
+    .order-item-price {
+        font-weight: 700;
+        color: #2c2348;
+    }
+
+    .order-total {
+        margin-top: 0.55rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #f0edf8;
+        display: flex;
+        justify-content: space-between;
+        font-weight: 800;
+        color: #1f1738;
+    }
+
+    .status-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 104px;
+        background: var(--primary-soft);
+        color: var(--primary-dark);
+        border: 1px solid #dcd2f3;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        padding: 0.3rem 0.72rem;
+        text-transform: uppercase;
+    }
+
+    .status-chip.processing {
+        background: #fef3c7;
+        color: #92400e;
+        border-color: #fde68a;
+    }
+
+    .status-chip.shipped {
+        background: #cffafe;
+        color: #155e75;
+        border-color: #a5f3fc;
+    }
+
+    .status-chip.delivered {
+        background: #dcfce7;
+        color: #166534;
+        border-color: #bbf7d0;
+    }
+
+    .status-chip.cancelled {
+        background: #fee2e2;
+        color: #991b1b;
+        border-color: #fecaca;
+    }
+
+    .orders-loyalty-banner {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem 1rem;
+        margin-bottom: 1rem;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #faf8ff 0%, #f3edff 100%);
+        border: 1px solid var(--border);
+        font-size: 0.92rem;
+        color: var(--text-main);
+    }
+
+    .orders-loyalty-banner strong {
+        color: var(--primary-dark);
+        font-size: 1rem;
+    }
+
+    .orders-loyalty-banner .loyalty-hint {
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        width: 100%;
+        flex-basis: 100%;
+        margin: 0;
+    }
+
+    @media (max-width: 576px) {
+        .order-card {
+            padding: 0.9rem;
+        }
+
+        .order-head {
+            gap: 0.6rem;
+        }
+
+        .status-chip {
+            min-width: auto;
+        }
+    }
+</style>
+
+<div class="orders-wrap py-3">
+    <div class="page-panel">
+        <div class="page-panel-header">
+            My Orders
+        </div>
+        <div class="page-panel-body">
+            <div class="orders-loyalty-banner" role="region" aria-label="Loyalty rewards">
+                <span><strong>★ {{ current_loyalty_points or 0 }} pts</strong> in your loyalty wallet</span>
+                <p class="loyalty-hint mb-0">Earn 1 point per ₱100 spent at checkout or when your account is selected at our store POS.</p>
+            </div>
+            <p class="section-subtitle mb-3">Permanent record after checkout. Track history, status, and order details here.</p>
+            {% if msg %}
+            <div class="alert alert-success py-2">{{ msg }}</div>
+            {% endif %}
+
+            {% if orders %}
+                <div class="d-flex flex-column gap-3">
+                    {% for row in orders %}
+                    <div class="order-card">
+                        <div class="order-head">
+                            <div>
+                                <div class="order-id">Order #{{ row.order.id }}</div>
+                                <p class="order-meta mb-0">{{ row.order.sale_date }} • {{ row.order.payment_method }}</p>
+                            </div>
+                            <span class="status-chip {{ (row.order.status or 'placed')|lower }}">{{ row.order.status }}</span>
+                        </div>
+
+                        {% for item in row.order_items %}
+                        <div class="order-item">
+                            <span class="order-item-name">
+                                {{ item.product_name }}
+                                <span class="order-item-qty">x {{ item.quantity }}</span>
+                            </span>
+                            <span class="order-item-price">₱{{ "{:,.2f}".format(item.subtotal) }}</span>
+                        </div>
+                        {% endfor %}
+
+                        <div class="order-total">
+                            <span>Total</span>
+                            <span>₱{{ "{:,.2f}".format(row.order.total_amount) }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <h2 class="section-title mb-2">No orders yet</h2>
+                    <p class="section-subtitle mb-4">Place your first order from the cart and it will appear here.</p>
+                    <a href="{{ base_url }}/products?admin={{ is_admin }}&user_id={{ user_id }}" class="btn btn-main">Start Shopping</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

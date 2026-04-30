@@ -1,0 +1,15 @@
+-- database: ./anik_shop.db
+
+-- 1. Mass-populate all cost prices as 65% of the selling price
+-- This ensures every single item now has a value
+UPDATE product 
+SET cost_price = ROUND(selling_price * 0.65, 2);
+
+-- 2. (Optional) Fine-tune specific items if you want exact numbers
+UPDATE product SET cost_price = 95.00 WHERE name LIKE '%My Melody%';
+UPDATE product SET cost_price = 75.00 WHERE name LIKE '%Kirby%';
+UPDATE product SET cost_price = 550.00 WHERE name LIKE '%Sora%';
+UPDATE product SET cost_price = 225.00 WHERE name LIKE '%Chopper%';
+
+-- 3. Verify the changes
+SELECT name, selling_price, cost_price FROM product;

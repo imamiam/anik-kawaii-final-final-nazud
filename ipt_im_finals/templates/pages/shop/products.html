@@ -1,0 +1,254 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+<style>
+    .category-header {
+        background-color: #ffffff;
+        color: var(--primary);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 22px;
+        display: inline-block;
+        font-weight: 700;
+        text-transform: none !important;
+    }
+
+    .product-card {
+        background: white;
+        border: 1px solid var(--border) !important;
+        border-radius: 8px !important;
+        overflow: hidden;
+    }
+
+    .product-image-container {
+        height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background-color: white;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand-text {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .price-text {
+        color: var(--text-main);
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .btn-admin-sm {
+        font-size: 0.8rem;
+        border-radius: 6px;
+        padding: 5px 13px;
+    }
+
+    .welcome-alert {
+        background-color: #ffffff;
+        border: 1px solid var(--border) !important;
+        color: var(--text-main) !important;
+        border-radius: 6px;
+    }
+
+    .shop-assurance {
+        background: linear-gradient(145deg, #eff6ff, #ffffff);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+    }
+
+    .assurance-item {
+        color: var(--text-muted);
+        font-size: 0.92rem;
+    }
+
+    .filter-panel {
+        background: #ffffff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem 1.1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .filter-label {
+        display: block;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 6px;
+        font-size: 1.05rem;
+    }
+
+    .filter-select {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid #b7b7b7;
+        background-color: #ffffff;
+        color: #212529;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 10px 38px 10px 14px;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 14 12 8 18 14'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        background-size: 14px;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.2rem rgba(30, 64, 175, 0.15);
+    }
+
+    .filter-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 0.85rem;
+        flex-wrap: wrap;
+    }
+
+    .products-page {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .category-section {
+        margin-bottom: 0;
+    }
+
+    .category-heading-wrap {
+        margin-bottom: 1.25rem;
+    }
+
+    .product-card .card-body {
+        padding: 1.1rem !important;
+    }
+
+</style>
+<div class="products-page py-2 py-lg-3">
+    <div class="shop-assurance p-3 p-lg-4 mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-lg-8">
+                <h2 class="h4 mb-1">Shop with confidence</h2>
+                <p class="mb-0 small text-muted">Authentic selections, protected account access, and friendly support every step of the way.</p>
+            </div>
+            <div class="col-lg-4">
+                <div class="d-flex flex-column gap-1">
+                    <span class="assurance-item"> Trusted product sourcing</span>
+                    <span class="assurance-item"> Easy product assistance</span>
+                    <span class="assurance-item"> Fast response from our team</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if msg %}
+    <div class="alert welcome-alert fw-bold mb-4 text-center p-3">
+        {{ msg }}
+    </div>
+    {% endif %}
+
+    <div class="filter-panel">
+        <form method="get" action="{{ base_url }}/products">
+            <input type="hidden" name="admin" value="{{ is_admin }}">
+            <input type="hidden" name="user_id" value="{{ user_id }}">
+            <input type="hidden" name="search" value="{{ filters.search }}">
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <label class="filter-label" for="filterCategory">Category:</label>
+                    <select id="filterCategory" name="category" class="filter-select">
+                        <option value="all" {% if filters.category == 'all' %}selected{% endif %}>All</option>
+                        {% for category in categories %}
+                        <option value="{{ category }}" {% if filters.category == category %}selected{% endif %}>{{ category|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="filter-label" for="filterPrice">Price:</label>
+                    <select id="filterPrice" name="price" class="filter-select">
+                        <option value="all" {% if filters.price == 'all' %}selected{% endif %}>All</option>
+                        <option value="under_500" {% if filters.price == 'under_500' %}selected{% endif %}>Under 500</option>
+                        <option value="500_1000" {% if filters.price == '500_1000' %}selected{% endif %}>500 - 1000</option>
+                        <option value="1000_2500" {% if filters.price == '1000_2500' %}selected{% endif %}>1000 - 2500</option>
+                        <option value="above_2500" {% if filters.price == 'above_2500' %}selected{% endif %}>2500 and above</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="filter-label" for="filterSort">Sort By:</label>
+                    <select id="filterSort" name="sort" class="filter-select">
+                        <option value="name_asc" {% if filters.sort == 'name_asc' %}selected{% endif %}>Name: A to Z</option>
+                        <option value="name_desc" {% if filters.sort == 'name_desc' %}selected{% endif %}>Name: Z to A</option>
+                        <option value="price_asc" {% if filters.sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="price_desc" {% if filters.sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <a class="btn btn-outline-main" href="{{ base_url }}/products?admin={{ is_admin }}&user_id={{ user_id }}">Reset</a>
+                <button type="submit" class="btn btn-main">Apply</button>
+            </div>
+        </form>
+    </div>
+
+    {% if not product_items %}
+    <div class="alert welcome-alert text-center p-3">
+        No products found for the selected filters.
+    </div>
+    {% endif %}
+
+    {% for category, items in product_items|groupby('category') %}
+    <div class="category-section">
+        
+        <div class="position-relative category-heading-wrap">
+            <div class="text-center">
+                <h2 class="category-header mb-0">
+                    {{ category|capitalize }}
+                </h2>
+            </div>
+
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+            {% for product in items %}
+            <div class="col">
+                <div class="card h-100 product-card">
+                    <div class="product-image-container">
+                        <img src="{{ base_url }}/static/img/products/{{ product.image }}"
+                             class="img-fluid" style="height: 180px; width: 100%; object-fit: contain;" alt="{{ product.name }}" loading="lazy" decoding="async">
+                    </div>
+                    
+                    <div class="card-body text-center p-4">
+                        <h5 class="fw-bold mb-1">{{ product.name }}</h5>
+                        <span class="brand-text">{{ product.brand }}</span>
+                        <p class="price-text mb-3">₱{{ "{:,.0f}".format(product.price) }}</p>
+                        
+                        {% if user_id and not is_admin %}
+                        <div class="mb-3">
+                            <a href="{{ base_url }}/cart/add/{{ product.id }}?admin={{ is_admin }}&user_id={{ user_id }}" class="btn btn-main w-100">Add to Cart</a>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <span class="badge {% if product.stock < 5 %}bg-danger{% else %}badge-neutral{% endif %} rounded-pill px-3">
+                                Stock: {{ product.stock }}
+                            </span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} | Kizuna Collections</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Allura&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ base_url }}/static/img/favicon.png">
+
+    <style>
+        :root {
+            --primary: #7c5ac8;
+            --primary-dark: #5f3faa;
+            --primary-soft: #efe9ff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --bg-main: #f7f5fc;
+            --border: #dcd3f0;
+            --surface: #ffffff;
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 1rem;
+            --space-4: 1.5rem;
+            --space-5: 2rem;
+            --radius-md: 0.5rem;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            background-color: #f3f0fa;
+            background-image: none;
+            font-family: "Roboto", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.55;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        a,
+        button,
+        .btn,
+        input,
+        select,
+        textarea {
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        a:focus-visible,
+        button:focus-visible,
+        .btn:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+            box-shadow: none !important;
+        }
+
+        .navbar {
+            background: linear-gradient(180deg, #6a4caf 0%, #4f3787 100%) !important;
+            border-bottom: 1px solid #462f79;
+            z-index: 1050;
+        }
+
+        .nav-shell {
+            min-height: 64px;
+            gap: 0.5rem;
+        }
+
+        .nav-collapse {
+            gap: 0.35rem;
+        }
+
+        .navbar-brand {
+            font-size: 1.2rem;
+            letter-spacing: 0.01em;
+            color: #ffffff !important;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .brand-lockup {
+            display: inline-flex;
+            flex-direction: column;
+            line-height: 1;
+        }
+
+        .brand-kizuna {
+            font-family: "Allura", cursive;
+            font-size: 2rem;
+            font-weight: 400;
+            letter-spacing: 0.01em;
+            color: #ffffff;
+        }
+
+        .brand-collections {
+            font-family: "Roboto", "Segoe UI", sans-serif;
+            font-size: 0.64rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #ede9fe;
+            margin-top: 0.04rem;
+        }
+
+        .nav-link-custom {
+            color: #ede9fe !important;
+            font-weight: 500;
+            text-decoration: none;
+            padding: 0.5rem 0.75rem !important;
+        }   
+
+        .nav-link-custom:hover,
+        .nav-link-custom.active,
+        .nav-link-custom:focus {
+            color: #ffffff !important;
+        }
+
+        .nav-link-custom.active {
+            background: rgba(255, 255, 255, 0.16);
+            border-radius: 6px;
+            box-shadow: inset 0 -2px 0 0 #c4b5fd;
+        }
+
+        .dropdown-menu {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.35rem;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+            background: #ffffff;
+        }
+
+        .dropdown-item {
+            border-radius: 8px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .dropdown-item:hover,
+        .dropdown-item:focus {
+            background: #f3edff;
+            color: var(--primary-dark);
+        }
+
+        .dropdown-item.active,
+        .dropdown-item:active {
+            background: var(--primary-soft);
+            color: var(--primary-dark);
+        }
+
+        .dropdown-divider {
+            border-top-color: var(--border);
+        }
+
+        .user-role-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            border-radius: 999px;
+            padding: 0.35rem 0.7rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .user-role-chip .role-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 0.12rem 0.45rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .role-badge-admin {
+            background: var(--primary-soft);
+            color: var(--primary-dark);
+            border: 1px solid #c7d2fe;
+        }
+
+        .admin-chip-toggle {
+            border: 0;
+            background: transparent;
+            color: var(--primary);
+            padding: 0.1rem 0.05rem 0.1rem 0.35rem;
+            margin-left: 0.1rem;
+            border-left: 1px solid var(--border);
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .admin-chip-toggle:hover {
+            color: var(--primary-dark);
+        }
+
+        .admin-chip-trigger {
+            border: 1px solid #c7d2fe;
+            background: #ffffff;
+            color: var(--primary-dark);
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+        }
+
+        .admin-chip-trigger::after {
+            margin-left: 0.35rem;
+        }
+
+        .admin-chip-trigger:hover,
+        .admin-chip-trigger:focus {
+            background: #eef2ff;
+            color: var(--primary-dark);
+        }
+
+        .dropdown-item-logout {
+            color: #dc2626;
+            font-weight: 700;
+        }
+
+        .dropdown-item-logout:hover,
+        .dropdown-item-logout:focus {
+            color: #b91c1c;
+            background: #fee2e2;
+        }
+
+        .role-badge-user {
+            background: #e2e8f0;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+
+        .search-input {
+            min-width: 220px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            padding: 0.45rem 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(124, 90, 200, 0.18);
+        }
+
+        .cart-link {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-primary-links {
+            gap: 0.2rem;
+        }
+
+        .nav-search-wrap {
+            margin: 0.65rem 0;
+        }
+
+        .nav-tool-links {
+            gap: 0.25rem;
+        }
+
+        .nav-register-btn,
+        .nav-logout-btn {
+            margin-top: 0.45rem;
+        }
+
+        .nav-admin-chip,
+        .nav-user-chip {
+            margin-top: 0.45rem;
+            margin-right: 0;
+        }
+
+        .nav-clock-item {
+            margin-left: 0.8rem;
+        }
+
+        @media (min-width: 992px) {
+            .nav-collapse {
+                align-items: center;
+            }
+
+            .nav-primary-links {
+                margin-right: 0.65rem;
+            }
+
+            .nav-search-wrap {
+                margin: 0 0.9rem 0 0.45rem;
+            }
+
+            .nav-tool-links {
+                margin-left: auto;
+                gap: 0.35rem;
+            }
+
+            .nav-register-btn,
+            .nav-logout-btn {
+                margin-top: 0;
+                margin-left: 0.3rem;
+            }
+
+            .nav-admin-chip,
+            .nav-user-chip {
+                margin-top: 0;
+                margin-left: 0.3rem;
+                margin-right: 0.3rem;
+            }
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -6px;
+            right: -8px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            border-radius: 999px;
+            background: var(--primary);
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            line-height: 18px;
+            text-align: center;
+            border: 2px solid #ffffff;
+        }
+
+        .nav-loyalty-item {
+            margin-top: 0.45rem;
+        }
+
+        .nav-loyalty-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            border-radius: 999px;
+            padding: 0.38rem 0.72rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #fff8f0;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+            white-space: nowrap;
+            letter-spacing: 0.01em;
+        }
+
+        .nav-loyalty-pill .loyalty-star {
+            color: #fde68a;
+            font-size: 0.85rem;
+            line-height: 1;
+        }
+
+        .dropdown-loyalty-blurb {
+            font-size: 0.8rem;
+            line-height: 1.35;
+            color: var(--text-muted);
+            padding: 0 1rem 0.5rem;
+            margin: -0.15rem 0 0;
+            max-width: 16rem;
+        }
+
+        .dropdown-loyalty-blurb strong {
+            color: var(--text-main);
+        }
+
+        @media (min-width: 992px) {
+            .nav-loyalty-item {
+                margin-top: 0;
+            }
+        }
+
+        .page-panel {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-4);
+        }
+
+        .page-panel-header {
+            background-color: #eef2ff;
+            border-bottom: 1px solid var(--border);
+            padding: 0.9rem 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+        }
+
+        .page-panel-body {
+            padding: var(--space-4);
+        }
+
+        .welcome-alert {
+            background: linear-gradient(180deg, #ffffff 0%, #eef2ff 100%);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 8px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 0.6rem;
+            font-size: 1.65rem;
+        }
+
+        .section-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 1.2rem;
+            font-size: 1rem;
+        }
+
+        h2, .h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        h3, .h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        h4, .h4 {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .form-control,
+        .form-select {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.6rem 0.75rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(124, 90, 200, 0.18);
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, #7c5ac8 0%, #5f3faa 100%);
+            border: 1px solid var(--primary-dark);
+            font-weight: 500;
+            color: #ffffff;
+            border-radius: var(--radius-md);
+            padding: 0.55rem 0.95rem;
+            line-height: 1.3;
+        }
+
+        .btn-main:hover {
+            background: linear-gradient(135deg, #8b6ad6 0%, #5f3faa 100%);
+            color: #ffffff;
+        }
+
+        .btn-outline-main {
+            border: 1px solid var(--primary);
+            background: linear-gradient(180deg, #ffffff 0%, #f3edff 100%);
+            color: var(--primary);
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            padding: 0.55rem 0.95rem;
+            line-height: 1.3;
+        }
+
+        .btn-main:active,
+        .btn-outline-main:active {
+            transform: translateY(1px);
+        }
+
+        .btn-main:disabled,
+        .btn-outline-main:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .btn-outline-main:hover {
+            background: #e7ddff;
+            color: var(--primary-dark);
+        }
+
+        .badge-neutral {
+            background: #e2e8f0;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+
+        .text-link {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .text-link:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .content-wrap {
+            max-width: 1280px;
+            width: 100%;
+            margin: 0 auto;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+
+        main.content-wrap {
+            flex: 1 0 auto;
+        }
+
+        .site-footer {
+            margin-top: 0;
+            background: linear-gradient(180deg, #5b4299 0%, #442f78 100%);
+            color: #ffffff;
+            border-top: 1px solid #3a2868;
+            flex-shrink: 0;
+        }
+
+        .footer-grid {
+            align-items: flex-start;
+        }
+
+        .footer-brand-col {
+            padding-right: 1rem;
+        }
+
+        .footer-brand {
+            color: #ffffff;
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            margin-bottom: 0.35rem;
+        }
+
+        .footer-brand .brand-kizuna {
+            font-size: 2rem;
+            color: #ffffff;
+        }
+
+        .footer-brand .brand-collections {
+            font-size: 0.66rem;
+            color: #e9ddff;
+        }
+
+        .footer-text {
+            color: #e2e8f0;
+            font-size: 0.92rem;
+            margin-bottom: 0;
+        }
+
+        .footer-heading {
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.65rem;
+        }
+
+        .footer-link-col {
+            min-width: 0;
+        }
+
+        .footer-links-group {
+            margin-left: auto;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li + li {
+            margin-top: 0.35rem;
+        }
+
+        .footer-link {
+            color: #e2e8f0;
+            text-decoration: none;
+            font-size: 0.92rem;
+        }
+
+        .footer-link:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 0.55rem;
+            margin-top: 1rem;
+        }
+
+        .footer-social-link {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #64748b;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .footer-social-link[aria-label="Facebook"] {
+            color: #1877f2;
+            border-color: #1877f2;
+            background: #ffffff;
+        }
+
+        .footer-social-link[aria-label="Instagram"] {
+            color: #e1306c;
+            border-color: #e1306c;
+            background: #ffffff;
+        }
+
+        .footer-social-link[aria-label="Twitter"] {
+            color: #111111;
+            border-color: #111111;
+            background: #ffffff;
+        }
+
+        .footer-social-link svg {
+            width: 15px;
+            height: 15px;
+            fill: currentColor;
+        }
+
+        .footer-social-link:hover {
+            background: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.24);
+            margin-top: 2rem;
+            padding-top: 1rem;
+            align-items: center;
+        }
+
+        .footer-bottom-text {
+            color: #e2e8f0;
+            font-size: 0.86rem;
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 767.98px) {
+
+            .footer-brand-col,
+            .footer-link-col {
+                text-align: center;
+            }
+
+            .footer-social {
+                justify-content: center;
+            }
+
+            .footer-bottom {
+                text-align: center;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    {% include "layout/navigation.html" %}
+
+    <main class="container-fluid content-wrap py-4 py-lg-5">
+        {% if show_welcome and current_path not in ['/login', '/register'] %}
+        <div class="alert welcome-alert border mb-4">
+            {% if is_admin %}
+            <strong>Welcome, Admin!</strong>
+            {% else %}
+            <strong>Welcome, {{ current_user_name }}!</strong>  
+            {% endif %}
+        </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer py-5">
+        <div class="container-fluid content-wrap">
+            <div class="row g-4 footer-grid">
+                <div class="col-lg-4 footer-brand-col">
+                    <h5 class="footer-brand mb-2">
+                        <span class="brand-lockup">
+                            <span class="brand-kizuna">Kizuna</span>
+                            <span class="brand-collections">Collections</span>
+                        </span>
+                    </h5>
+                    <p class="footer-text">Your cute merch destination for anime figures, plush collectibles, and fandom accessories.</p>
+                    <div class="footer-social">
+                        <a href="#" class="footer-social-link" aria-label="Facebook">
+                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                                <path d="M13.5 22v-8h2.7l.4-3h-3.1V9.1c0-.9.3-1.6 1.6-1.6h1.6V4.8c-.3 0-1.2-.1-2.3-.1-2.3 0-3.8 1.4-3.8 4v2.2H8.2v3h2.9v8h2.4z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="footer-social-link" aria-label="Instagram">
+                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                                <path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4c0 3.2-2.6 5.8-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8C2 4.6 4.6 2 7.8 2zm8.2 1.9H8c-2.3 0-4.1 1.8-4.1 4.1V16c0 2.3 1.8 4.1 4.1 4.1H16c2.3 0 4.1-1.8 4.1-4.1V8c0-2.3-1.8-4.1-4.1-4.1zm.7 1.4c.5 0 1 .4 1 1s-.4 1-1 1-1-.4-1-1 .4-1 1-1zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 1.9a3.1 3.1 0 1 0 0 6.2 3.1 3.1 0 0 0 0-6.2z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="footer-social-link" aria-label="Twitter">
+                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                                <path d="M18.9 2H22l-6.8 7.8L23 22h-6.1l-4.8-6.3L6.6 22H3.5l7.3-8.3L1 2h6.2l4.3 5.8L18.9 2zm-1.1 18h1.7L6.2 3.9H4.4L17.8 20z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-7 offset-lg-1 footer-links-group">
+                    <div class="row g-4 justify-content-lg-end">
+                        <div class="col-6 col-lg-4 footer-link-col">
+                            <h6 class="footer-heading">About</h6>
+                            <ul class="footer-links">
+                                <li><a class="footer-link" href="{{ base_url }}/thecompany?admin={{ is_admin }}&user_id={{ user_id }}">Our Story</a></li>
+                                <li><a class="footer-link" href="{{ base_url }}/thehistory?admin={{ is_admin }}&user_id={{ user_id }}">History</a></li>
+                                <li><a class="footer-link" href="{{ base_url }}/products?admin={{ is_admin }}&user_id={{ user_id }}">Featured Products</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-6 col-lg-4 footer-link-col">
+                            <h6 class="footer-heading">Support</h6>
+                            <ul class="footer-links">
+                                <li><a class="footer-link" href="{{ base_url }}/contactus?admin={{ is_admin }}&user_id={{ user_id }}">Contact Us</a></li>
+                                <li><a class="footer-link" href="{{ base_url }}/login">Account Login</a></li>
+                                <li><a class="footer-link" href="{{ base_url }}/register">Create Account</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-12 col-lg-4 footer-link-col">
+                            <h6 class="footer-heading">Shop</h6>
+                            <ul class="footer-links">
+                                <li><a class="footer-link" href="{{ base_url }}/products?admin={{ is_admin }}&user_id={{ user_id }}">All Products</a></li>
+                                <li><a class="footer-link" href="{{ base_url }}/products?admin={{ is_admin }}&user_id={{ user_id }}">New Arrivals</a></li>
+                                <li><a class="footer-link" href="{{ base_url }}/products?admin={{ is_admin }}&user_id={{ user_id }}">Best Sellers</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between gap-2">
+                <p class="footer-bottom-text">Copyright {{ current_year if current_year else 2026 }} Kizuna Collections. All rights reserved.</p>
+                <p class="footer-bottom-text">Privacy Policy | Terms and Conditions</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

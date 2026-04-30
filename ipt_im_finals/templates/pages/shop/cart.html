@@ -1,0 +1,234 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+<style>
+    .cart-shell {
+        max-width: 920px;
+        margin: 0 auto;
+    }
+
+    .cart-card {
+        background: #ffffff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    .cart-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+
+    .cart-subtitle {
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .cart-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 0.8rem;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+        padding: 0.9rem 0.2rem;
+    }
+
+    .cart-item__title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .cart-item__meta {
+        margin: 0.2rem 0 0 0;
+        color: var(--text-muted);
+        font-size: 0.92rem;
+    }
+
+    .cart-qty-control {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+    }
+
+    .cart-qty-btn {
+        width: 32px;
+        height: 30px;
+        border: 1px solid var(--border);
+        background: #ffffff;
+        color: var(--text-main);
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .cart-qty-value {
+        min-width: 18px;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .cart-item__total {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .cart-item__price {
+        font-weight: 700;
+        color: var(--primary);
+        white-space: nowrap;
+    }
+
+    .cart-item__remove {
+        color: #dc2626;
+        text-decoration: none;
+        font-size: 1.15rem;
+        line-height: 1;
+    }
+
+    .cart-summary {
+        margin-top: 1rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--primary-soft);
+        padding: 1rem;
+    }
+
+    .cart-summary-line {
+        display: flex;
+        justify-content: space-between;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+    }
+
+    .cart-summary-line:last-child {
+        margin-bottom: 0;
+    }
+
+    .cart-summary-total {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+    }
+
+    .cart-summary-total strong:last-child {
+        color: var(--primary);
+        font-size: 1.2rem;
+    }
+
+    .cart-loyalty-note {
+        margin-top: 0.65rem;
+        padding: 0.55rem 0.75rem;
+        border-radius: 8px;
+        background: linear-gradient(180deg, #faf8ff 0%, #f3edff 100%);
+        border: 1px solid var(--border);
+        font-size: 0.88rem;
+        color: var(--text-main);
+    }
+
+    .cart-loyalty-note strong {
+        color: var(--primary-dark);
+    }
+
+    .cart-actions {
+        margin-top: 0.8rem;
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+    }
+
+    .cart-actions .btn {
+        min-width: 170px;
+    }
+
+    .cart-empty {
+        text-align: center;
+        padding: 2rem 1rem 1rem;
+    }
+
+    @media (max-width: 767.98px) {
+        .cart-item {
+            grid-template-columns: 1fr;
+            align-items: start;
+        }
+
+        .cart-item__total {
+            justify-content: space-between;
+        }
+
+        .cart-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="cart-shell py-2 py-lg-3">
+    <div class="cart-card">
+        <h2 class="cart-title">Your Cart</h2>
+        <p class="cart-subtitle">Temporary list before checkout. Review your items and total here.</p>
+
+        {% if items %}
+            {% for row in items %}
+            <div class="cart-item">
+                <div>
+                    <h3 class="cart-item__title">{{ row.product.name }}</h3>
+                    <p class="cart-item__meta">₱{{ "{:,.2f}".format(row.product.price) }} each</p>
+                </div>
+                <div class="cart-qty-control">
+                    <a href="{{ base_url }}/cart/update/{{ row.item.id }}?action=dec&admin={{ is_admin }}&user_id={{ user_id }}"
+                       class="cart-qty-btn"
+                       aria-label="Decrease quantity for {{ row.product.name }}">-</a>
+                    <span class="cart-qty-value">{{ row.item.quantity }}</span>
+                    <a href="{{ base_url }}/cart/update/{{ row.item.id }}?action=inc&admin={{ is_admin }}&user_id={{ user_id }}"
+                       class="cart-qty-btn"
+                       aria-label="Increase quantity for {{ row.product.name }}">+</a>
+                </div>
+                <div class="cart-item__total">
+                    <span class="cart-item__price">₱{{ "{:,.2f}".format(row.subtotal) }}</span>
+                    <a href="{{ base_url }}/cart/remove/{{ row.item.id }}?admin={{ is_admin }}&user_id={{ user_id }}"
+                       class="cart-item__remove"
+                       aria-label="Remove {{ row.product.name }} from cart">x</a>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="cart-summary">
+                <div class="cart-summary-line">
+                    <span>Subtotal</span>
+                    <span>₱{{ "{:,.2f}".format(total) }}</span>
+                </div>
+                <div class="cart-summary-line">
+                    <span>Shipping</span>
+                    <span>Calculated at checkout</span>
+                </div>
+                <div class="cart-loyalty-note" role="status">
+                    <strong>★ {{ current_loyalty_points or 0 }} pts</strong> available — redeem at checkout (₱1 off per point).
+                </div>
+                <div class="cart-summary-total">
+                    <strong>Total</strong>
+                    <strong>₱{{ "{:,.2f}".format(total) }}</strong>
+                </div>
+            </div>
+
+            <div class="cart-actions">
+                <a href="{{ base_url }}/products?admin={{ is_admin }}&user_id={{ user_id }}" class="btn btn-outline-main">Continue Shopping</a>
+                <a href="{{ base_url }}/checkout?admin={{ is_admin }}&user_id={{ user_id }}" class="btn btn-main">Proceed to Checkout</a>
+            </div>
+        {% else %}
+            <div class="cart-empty">
+                <h5 class="mb-2">Your cart is empty</h5>
+                <p class="text-muted mb-3">Looks like you haven't added anything yet.</p>
+                <a href="{{ base_url }}/products?admin={{ is_admin }}&user_id={{ user_id }}" class="btn btn-main">Browse Products</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

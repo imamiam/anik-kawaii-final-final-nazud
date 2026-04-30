@@ -1,0 +1,40 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-5">
+        <div class="page-panel bg-white">
+            <div class="page-panel-header">
+                User Login
+            </div>
+            <div class="page-panel-body">
+                <h2 class="text-center section-title">Sign In</h2>
+                <p class="text-center section-subtitle">Access your account to continue shopping.</p>
+                
+                {% if error %}
+                    <div class="alert alert-danger fw-semibold">{{ error }}</div>
+                {% endif %}
+
+                <form action="/login" method="POST">
+                    <div class="mb-3 text-start">
+                        <label class="fw-bold" for="loginEmail">Email</label>
+                        <input id="loginEmail" type="email" name="email" class="form-control" placeholder="name@example.com" autocomplete="email" required>
+                    </div>
+                    <div class="mb-4 text-start">
+                        <label class="fw-bold" for="loginPassword">Password</label>
+                        <input id="loginPassword" type="password" name="password" class="form-control" placeholder="••••••••" autocomplete="current-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-main w-100 fw-bold">
+                        Sign In
+                    </button>
+                </form>
+                
+                <div class="mt-4 pt-3 border-top text-center">
+                    <p class="mb-0 fw-semibold">Do not have an account?
+                        <a href="{{ base_url }}/register" class="text-link">Register here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
