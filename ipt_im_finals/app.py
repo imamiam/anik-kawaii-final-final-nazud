@@ -39,30 +39,68 @@ class Product(Base):
     unit = Column(String(20), default="")
     status = Column(String(20), default="active")
 
-class User(Base):
-    __tablename__ = 'customer'
-    id = Column("customer_id", Integer, primary_key=True)
-    name = Column("full_name", String)
-    phone = Column(String, default="")
-    email = Column(String, unique=True)
-    password = Column("password", String)
-    is_admin = Column(Integer, default=0)
-    loyalty_points = Column(Integer, default=0)
-    linked_staff_id = Column(Integer, nullable=True)
-
-class CartItem(Base):
-    __tablename__ = 'cart_items'
+class Cart_Item(Base):
+    __tablename__ = 'cart_item'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False)
     product_id = Column(Integer, nullable=False)
     quantity = Column(Integer, default=1)
 
-class POSCartItem(Base):
-    __tablename__ = 'pos_cart_items'
+class Pos_Cart_Item(Base):
+    __tablename__ = 'pos_cart_item'
     id = Column(Integer, primary_key=True)
     cashier_id = Column(Integer, nullable=False)
     product_id = Column(Integer, nullable=False)
     quantity = Column(Integer, default=1)
+
+class Sale_Item(Base):
+    __tablename__ = 'sale_item'
+    id = Column("sale_item_id", Integer, primary_key=True)
+    sale_id = Column(Integer, nullable=False)
+    product_id = Column(Integer, nullable=False)
+    quantity = Column(Integer, default=1)
+    unit_price = Column(Float, default=0.0)
+    line_total = Column(Float, default=0.0)
+
+class Purchase_Order(Base):
+    __tablename__ = 'purchase_order'
+    id = Column("po_id", Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    supplier_id = Column(Integer, nullable=False)
+    order_date = Column(String(30), default="")
+    received_date = Column(String(30), default="")
+    total_cost = Column(Float, default=0.0)
+    status = Column(String(20), default="pending")
+
+class Po_Item(Base):
+    __tablename__ = 'po_item'
+    id = Column("po_item_id", Integer, primary_key=True)
+    po_id = Column(Integer, nullable=False)
+    product_id = Column(Integer, nullable=False)
+    qty_ordered = Column(Integer, default=0)
+    qty_received = Column(Integer, default=0)
+    unit_cost = Column(Float, default=0.0)
+
+class Stock_Movement(Base):
+    __tablename__ = 'stock_movement'
+    id = Column("movement_id", Integer, primary_key=True)
+    product_id = Column(Integer, nullable=False)
+    cashier_id = Column(Integer, nullable=False)
+    type = Column(String(20), default="")
+    quantity = Column(Integer, default=0)
+    reason = Column(String, default="")
+    moved_at = Column(String(30), default="")
+
+class User(Base):
+    __tablename__ = 'user'
+    id = Column("user_id", Integer, primary_key=True)
+    first_name = Column(String) 
+    last_name = Column(String)   
+    email = Column(String, unique=True)
+    phone = Column(String)
+    password = Column(String)
+    role = Column(String)       
+    loyalty_points = Column(Integer, default=0)
 
 class Category(Base):
     __tablename__ = 'category'
@@ -77,7 +115,20 @@ class Supplier(Base):
     contact_person = Column(String(100), default="")
     phone = Column(String(30), default="")
     email = Column(String(100), default="")
-    address = Column(String, default="")
+    street = Column(String)
+    city = Column(String)
+    zip_code = Column(String)
+
+class Admin(Base):
+    __tablename__ = 'admin'
+    id = Column("admin_id", Integer, primary_key=True)
+    first_name = Column(String(50)) 
+    last_name = Column(String(50))  
+    username = Column(String(50), unique=True)
+    password_hash = Column(String(120))
+    email = Column(String(100), unique=True)
+    role = Column(String(30), default="admin")
+    status = Column(String(20), default="active")
 
 class Discount(Base):
     __tablename__ = 'discount'
@@ -90,72 +141,24 @@ class Discount(Base):
     applies_to = Column(String(100), default="")
     status = Column(String(20), default="active")
 
-class Staff(Base):
-    __tablename__ = 'staff'
-    id = Column("cashier_id", Integer, primary_key=True)
-    full_name = Column(String(100), default="")
-    username = Column(String(50), default="")
-    password_hash = Column(String(120), default="")
-    role = Column(String(30), default="")
-    status = Column(String(20), default="active")
-
 class Sale(Base):
     __tablename__ = 'sale'
     id = Column("sale_id", Integer, primary_key=True)
-    cashier_id = Column(Integer, nullable=True)
+    user_id = Column(Integer, nullable=False)
     customer_id = Column(Integer, nullable=False)
     discount_id = Column(Integer, nullable=True)
+    total_amount = Column(Float, default=0.0)
     sale_date = Column(String(30), default="")
     subtotal = Column(Float, default=0.0)
     discount_amount = Column(Float, default=0.0)
     tax_amount = Column(Float, default=0.0)
-    total_amount = Column(Float, default=0.0)
     payment_method = Column(String(50), default="Cash on Delivery")
     amount_tendered = Column(Float, default=0.0)
     change_given = Column(Float, default=0.0)
     status = Column(String(20), default="Placed")
-    customer_name = Column(String(100), default="")
-    customer_phone = Column(String(30), default="")
-    delivery_address = Column(String, default="")
-
-class SaleItem(Base):
-    __tablename__ = 'saleitem'
-    id = Column("sale_item_id", Integer, primary_key=True)
-    sale_id = Column(Integer, nullable=False)
-    product_id = Column(Integer, nullable=False)
-    quantity = Column(Integer, default=1)
-    unit_price = Column(Float, default=0.0)
-    discount_pct = Column(Float, default=0.0)
-    line_total = Column(Float, default=0.0)
-
-class PurchaseOrder(Base):
-    __tablename__ = 'purchaseorder'
-    id = Column("po_id", Integer, primary_key=True)
-    supplier_id = Column(Integer, nullable=False)
-    cashier_id = Column(Integer, nullable=False)
-    order_date = Column(String(30), default="")
-    received_date = Column(String(30), default="")
-    total_cost = Column(Float, default=0.0)
-    status = Column(String(20), default="pending")
-
-class POItem(Base):
-    __tablename__ = 'poitem'
-    id = Column("po_item_id", Integer, primary_key=True)
-    po_id = Column(Integer, nullable=False)
-    product_id = Column(Integer, nullable=False)
-    qty_ordered = Column(Integer, default=0)
-    qty_received = Column(Integer, default=0)
-    unit_cost = Column(Float, default=0.0)
-
-class StockMovement(Base):
-    __tablename__ = 'stockmovement'
-    id = Column("movement_id", Integer, primary_key=True)
-    product_id = Column(Integer, nullable=False)
-    cashier_id = Column(Integer, nullable=False)
-    type = Column(String(20), default="")
-    quantity = Column(Integer, default=0)
-    reason = Column(String, default="")
-    moved_at = Column(String(30), default="")
+    delivery_street = Column(String, default="")
+    delivery_city = Column(String, default="")
+    delivery_zip = Column(String, default="")
 
 engine = create_engine(DB_URL)
 Session = sessionmaker(bind=engine)
@@ -166,6 +169,41 @@ SessionUser = Session
 Base.metadata.create_all(engine)
 
 env = Environment(loader=FileSystemLoader("templates"))
+
+def admin_cancel_sale(request, sale_id):
+    user_id, is_admin, denial = require_admin(request)
+    if denial is not None: return denial
+    
+    db_session = SessionProd()
+    try:
+        sale = db_session.query(Sale).filter_by(id=sale_id).first()
+        if not sale or sale.status == "Cancelled":
+            return redirect_admin_dashboard(request, panel_default="sales-panel", msg="Cannot cancel this sale")
+
+        sale_items = db_session.query(Sale_Item).filter_by(sale_id=sale_id).all()
+        
+        moved_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        for item in sale_items:
+            product = db_session.query(Product).filter_by(id=item.product_id).first()
+            if product:
+                product.stock = (product.stock or 0) + item.quantity
+                
+                db_session.add(Stock_Movement(
+                    product_id=product.id,
+                    cashier_id=user_id,
+                    type="IN",
+                    quantity=item.quantity,
+                    reason=f"Restored from Cancelled Sale #{sale.id}",
+                    moved_at=moved_at
+                ))
+
+        sale.status = "Cancelled"
+        db_session.commit()
+        msg = "Sale cancelled and stock restored"
+    finally:
+        db_session.close()
+        
+    return redirect_admin_dashboard(request, panel_default="sales-panel", msg=msg)
 
 def ensure_user_schema():
     conn = engine.raw_connection()
@@ -265,10 +303,6 @@ def ensure_master_schema():
             "address": "ALTER TABLE supplier ADD COLUMN address TEXT DEFAULT ''",
         })
 
-        ensure_columns("staff", {
-            "password_hash": "ALTER TABLE staff ADD COLUMN password_hash TEXT DEFAULT ''",
-        })
-
         ensure_columns("product", {
             "sku": "ALTER TABLE product ADD COLUMN sku TEXT DEFAULT ''",
             "barcode": "ALTER TABLE product ADD COLUMN barcode TEXT DEFAULT ''",
@@ -282,18 +316,22 @@ def ensure_master_schema():
     finally:
         conn.close()
 
-ensure_user_schema()
-ensure_sale_schema()
-ensure_discount_schema()
-ensure_master_schema()
+#ensure_user_schema()
+#ensure_sale_schema()
+#ensure_discount_schema()
+#ensure_master_schema()
 
 def get_is_admin(request):
-    raw_admin = request.args.get('admin')
-    if raw_admin is None:
-        raw_admin = request.form.get('admin')
-    if raw_admin is None:
-        raw_admin = request.cookies.get('is_admin')
-    return str(raw_admin).lower() == 'true'
+    user_id = get_user_id(request)
+    if not user_id:
+        return False
+    
+    db_session = SessionUser()
+    try:
+        admin_exists = db_session.query(Admin).filter_by(id=user_id).first()
+        return admin_exists is not None
+    finally:
+        db_session.close()
 
 def get_user_id(request):
     raw_user_id = request.args.get('user_id') or request.form.get('user_id')
@@ -352,31 +390,29 @@ def compute_points_earned(total_amount):
 def resolve_staff_cashier_id(db_session, user_id):
     if user_id is not None:
         user = db_session.query(User).filter_by(id=user_id).first()
-        if user and user.linked_staff_id:
-            staff = db_session.query(Staff).filter_by(id=user.linked_staff_id).first()
-            if staff and (not staff.status or staff.status.lower() == "active"):
-                return staff.id
+        if user and user.role.lower() in ['cashier', 'admin']:
+            return user.id
 
-    active_staff = db_session.query(Staff).filter(func.lower(Staff.status) == "active").order_by(Staff.id.asc()).first()
+    active_staff = db_session.query(User).filter(User.role.ilike('cashier')).order_by(User.id.asc()).first()
     if active_staff:
         return active_staff.id
-    any_staff = db_session.query(Staff).order_by(Staff.id.asc()).first()
-    return any_staff.id if any_staff else None
+    
+    any_admin = db_session.query(User).filter(User.role.ilike('admin')).order_by(User.id.asc()).first()
+    return any_admin.id if any_admin else None
 
 def resolve_default_online_cashier_id(db_session):
-    staff = db_session.query(Staff).order_by(Staff.id.asc()).first()
+    staff = db_session.query(User).filter(User.role.in_(['cashier', 'admin'])).order_by(User.id.asc()).first()
     return staff.id if staff else None
 
 def render(template, request, **context):
     user_id = get_user_id(request)
-    is_admin = get_is_admin(request)
     search_term = (request.args.get('search') or '').strip()
-
+    
     current_user_name = ""
     current_user_role = "User"
     current_loyalty_points = 0
     is_authenticated = user_id is not None
-    show_welcome = False
+    is_admin = False
     cart_count = 0
 
     if user_id is not None:
@@ -384,34 +420,32 @@ def render(template, request, **context):
         try:
             user = db_session.query(User).filter_by(id=user_id).first()
             if user:
-                is_admin = True if user.is_admin == 1 else False
+                is_admin = (user.role.lower() in ['admin', 'cashier'])
                 current_loyalty_points = user.loyalty_points or 0
-                raw_name = (user.name or "").strip()
-                if not raw_name:
-                    raw_name = (user.email or "").split("@")[0].strip()
-                current_user_name = raw_name or "User"
-                current_user_role = "Admin" if is_admin else "User"
+                current_user_name = (user.first_name or user.email.split("@")[0] or "User").strip()
+                current_user_role = user.role.capitalize() if user.role else "User"
         finally:
             db_session.close()
 
         dbp = SessionProd()
         try:
-            cart_rows = dbp.query(CartItem.quantity).filter_by(user_id=user_id).all()
+            cart_rows = dbp.query(Cart_Item.quantity).filter_by(user_id=user_id).all()
             cart_count = sum([(row[0] or 0) for row in cart_rows])
         finally:
             dbp.close()
 
-    context['is_admin'] = is_admin
-    context['user_id'] = str(user_id) if user_id is not None else ""
-    context['base_url'] = BASE_URL
-    context['search_term'] = search_term
-    context['current_path'] = request.path
-    context['is_authenticated'] = is_authenticated
-    context['current_user_name'] = current_user_name
-    context['current_user_role'] = current_user_role
-    context['current_loyalty_points'] = current_loyalty_points
-    context['show_welcome'] = show_welcome
-    context['cart_count'] = cart_count
+    context.update({
+        'is_admin': is_admin,
+        'user_id': str(user_id) if user_id is not None else "",
+        'base_url': BASE_URL,
+        'search_term': search_term,
+        'current_path': request.path,
+        'is_authenticated': is_authenticated,
+        'current_user_name': current_user_name,
+        'current_user_role': current_user_role,
+        'current_loyalty_points': current_loyalty_points,
+        'cart_count': cart_count
+    })
 
     if 'session' not in context:
         context['session'] = {'user_id': user_id} if user_id is not None else {}
@@ -450,6 +484,8 @@ url_map = Map([
     Rule("/checkout", endpoint="checkout", methods=["GET", "POST"]),
     Rule("/api/dashboard/stats", endpoint="api_dashboard_stats", methods=["GET"]),
     Rule("/api/supplier-products/<int:supplier_id>", endpoint="get_supplier_products"),
+    Rule("/admin/sales/<int:sale_id>/cancel", endpoint="admin_cancel_sale", methods=["POST"]),
+    Rule("/api/barcode-lookup", endpoint="api_barcode_lookup"),
 ], strict_slashes=False)
 
 def home(request):
@@ -485,9 +521,9 @@ def api_dashboard_stats(request):
 
         # Top 5 products by units sold
         top_raw = db.query(
-            SaleItem.product_id,
-            func.sum(SaleItem.quantity).label("total_sold")
-        ).group_by(SaleItem.product_id).order_by(func.sum(SaleItem.quantity).desc()).limit(5).all()
+            Sale_Item.product_id,
+            func.sum(Sale_Item.quantity).label("total_sold")
+        ).group_by(Sale_Item.product_id).order_by(func.sum(Sale_Item.quantity).desc()).limit(5).all()
 
         payload = {
             "today": {
@@ -528,7 +564,7 @@ def require_admin(request):
     dbu = SessionUser()
     try:
         u = dbu.query(User).filter_by(id=user_id).first()
-        if not u or u.is_admin != 1:
+        if not u or u.role.lower() not in ['admin', 'cashier']:
             return user_id, False, redirect("/products")
     finally:
         dbu.close()
@@ -571,10 +607,10 @@ def admin_dashboard(request):
         sale_rows = dbp.query(Sale).order_by(Sale.id.desc()).limit(15).all()
         recent_sales = []
         for sale in sale_rows:
-            item_count = dbp.query(SaleItem).filter_by(sale_id=sale.id).count()
-            sale_items = dbp.query(SaleItem, Product).join(
-                Product, SaleItem.product_id == Product.id
-            ).filter(SaleItem.sale_id == sale.id).all()
+            item_count = dbp.query(Sale_Item).filter_by(sale_id=sale.id).count()
+            sale_items = dbp.query(Sale_Item, Product).join(
+                Product, Sale_Item.product_id == Product.id
+            ).filter(Sale_Item.sale_id == sale.id).all()
             detail_items = []
             for sale_item, product in sale_items:
                 detail_items.append({
@@ -589,9 +625,9 @@ def admin_dashboard(request):
             })
 
         top_products_query = dbp.query(
-            SaleItem.product_id,
-            func.sum(SaleItem.quantity).label("units_sold")
-        ).group_by(SaleItem.product_id).order_by(func.sum(SaleItem.quantity).desc()).limit(10).all()
+            Sale_Item.product_id,
+            func.sum(Sale_Item.quantity).label("units_sold")
+        ).group_by(Sale_Item.product_id).order_by(func.sum(Sale_Item.quantity).desc()).limit(10).all()
         top_products = []
         for product_id, units_sold in top_products_query:
             product = dbp.query(Product).filter_by(id=product_id).first()
@@ -601,9 +637,9 @@ def admin_dashboard(request):
                 "units_sold": int(units_sold or 0)
             })
 
-        stock_rows = dbp.query(StockMovement, Product).join(
-            Product, StockMovement.product_id == Product.id
-        ).order_by(StockMovement.id.desc()).limit(20).all()
+        stock_rows = dbp.query(Stock_Movement, Product).join(
+            Product, Stock_Movement.product_id == Product.id
+        ).order_by(Stock_Movement.id.desc()).limit(20).all()
         stock_movements = []
         for movement, product in stock_rows:
             stock_movements.append({
@@ -611,13 +647,13 @@ def admin_dashboard(request):
                 "product_name": (product.name if product else f"Product #{movement.product_id}")
             })
 
-        po_rows = dbp.query(PurchaseOrder).order_by(PurchaseOrder.id.desc()).limit(20).all()
+        po_rows = dbp.query(Purchase_Order).order_by(Purchase_Order.id.desc()).limit(20).all()
         supplier_rows = dbp.query(Supplier).order_by(Supplier.name.asc()).all()
         suppliers = [{"id": s.id, "name": s.name} for s in supplier_rows]
         purchase_orders = []
         for po in po_rows:
             supplier = dbp.query(Supplier).filter_by(id=po.supplier_id).first()
-            item_count = dbp.query(POItem).filter_by(po_id=po.id).count()
+            item_count = dbp.query(Po_Item).filter_by(po_id=po.id).count()
             purchase_orders.append({
                 "po": po,
                 "supplier_id": (supplier.id if supplier else f"Supplier #{po.supplier_id}"),
@@ -628,25 +664,43 @@ def admin_dashboard(request):
         po_cashier_id = pos_cashier_id
         pos_rows = []
         if pos_cashier_id is not None:
-            pos_rows = dbp.query(POSCartItem, Product).join(
-                Product, POSCartItem.product_id == Product.id
-            ).filter(POSCartItem.cashier_id == pos_cashier_id).all()
+            pos_rows = dbp.query(Pos_Cart_Item, Product).join(
+                Product, Pos_Cart_Item.product_id == Product.id
+            ).filter(Pos_Cart_Item.cashier_id == pos_cashier_id).all()
+
         pos_cart_items = []
         pos_subtotal = 0.0
+        total_qty = 0
+        
         for pos_item, product in pos_rows:
             line_total = (product.price or 0.0) * (pos_item.quantity or 0)
             pos_subtotal += line_total
+            total_qty += (pos_item.quantity or 0)
             pos_cart_items.append({
                 "pos_item": pos_item,
                 "product": product,
                 "line_total": line_total
             })
+
+        if total_qty >= 5:
+            pos_discount = 100.0
+        elif total_qty >= 3:
+            pos_discount = 75.0
+        elif total_qty > 0:
+            pos_discount = 50.0
+        else:
+            pos_discount = 0.0
+            
+        pos_total = round(pos_subtotal - pos_discount, 2)
+        pos_tax = round(pos_total - (pos_total / 1.12), 2)
+        pos_net_subtotal = round(pos_total - pos_tax, 2)
+            
     finally:
         dbp.close()
 
     dbu2 = SessionUser()
     try:
-        customer_query = dbu2.query(User).filter(User.is_admin != 1).order_by(User.id.asc())
+        customer_query = dbu2.query(User).filter(User.role != 'admin').order_by(User.id.asc())
         all_customers = customer_query.all()
         customer_total = len(all_customers)
         customers = all_customers
@@ -680,13 +734,13 @@ def admin_dashboard(request):
                 "top_customer_points": int(top_customer.loyalty_points or 0) if top_customer else 0,
             },
             "top_customers": {
-                "labels": [c.name for c in top_customers_sorted],
+                "labels": [c.first_name for c in top_customers_sorted],
                 "values": [int(c.loyalty_points or 0) for c in top_customers_sorted],
             },
             "top_customers_details": [
                 {
                     "id": int(c.id or 0),
-                    "name": c.name,
+                    "name": c.first_name,
                     "email": c.email,
                     "phone": c.phone,
                     "points": int(c.loyalty_points or 0),
@@ -723,6 +777,9 @@ def admin_dashboard(request):
         po_cashier_id=po_cashier_id,
         pos_cart_items=pos_cart_items,
         pos_subtotal=pos_subtotal,
+        pos_tax=pos_tax,         
+        pos_discount=pos_discount, 
+        pos_total=pos_total,   
         pos_cashier_id=pos_cashier_id,
         customers=customers,
         customer_total=customer_total,
@@ -731,6 +788,7 @@ def admin_dashboard(request):
         product_search=product_search,
         product_category=product_category,
         product_categories=product_categories,
+        pos_net_subtotal=pos_net_subtotal,
         msg=msg,
     )
 
@@ -788,9 +846,9 @@ def admin_create_purchase_order(request):
         order_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         total_cost = round(sum([item["qty_ordered"] * item["unit_cost"] for item in po_items_payload]), 2)
         
-        po = PurchaseOrder(
+        po = Purchase_Order(
             supplier_id=supplier.id,
-            cashier_id=cashier_id,
+            user_id=cashier_id, # Changed from cashier_id to user_id
             order_date=order_date,
             total_cost=total_cost,
             status="pending"
@@ -799,7 +857,7 @@ def admin_create_purchase_order(request):
         db_session.flush()
 
         for payload in po_items_payload:
-            db_session.add(POItem(
+            db_session.add(Po_Item(
                 po_id=po.id,
                 product_id=payload["product_id"],
                 qty_ordered=payload["qty_ordered"],
@@ -833,11 +891,11 @@ def admin_receive_purchase_order(request, po_id):
     db_session = SessionProd()
     try:
         cashier_id = resolve_staff_cashier_id(db_session, user_id)
-        po = db_session.query(PurchaseOrder).filter_by(id=po_id).first()
+        po = db_session.query(Purchase_Order).filter_by(id=po_id).first()
         if po is None:
             return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel={panel}&msg=PO+not+found")
 
-        po_items = db_session.query(POItem).filter_by(po_id=po.id).all()
+        po_items = db_session.query(Po_Item).filter_by(po_id=po.id).all()
         moved_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         for item in po_items:
             remaining = max((item.qty_ordered or 0) - (item.qty_received or 0), 0)
@@ -847,7 +905,7 @@ def admin_receive_purchase_order(request, po_id):
             if product:
                 product.stock = (product.stock or 0) + remaining
                 item.qty_received = (item.qty_received or 0) + remaining
-                db_session.add(StockMovement(
+                db_session.add(Stock_Movement(
                     product_id=product.id,
                     cashier_id=cashier_id,
                     type="IN",
@@ -891,9 +949,9 @@ def admin_pos_add_product(request, product_id):
         cashier_id = resolve_staff_cashier_id(db_session, user_id)
         product = db_session.query(Product).filter_by(id=product_id).first()
         if product and (product.stock or 0) > 0:
-            existing = db_session.query(POSCartItem).filter_by(cashier_id=cashier_id, product_id=product_id).first()
+            existing = db_session.query(Pos_Cart_Item).filter_by(cashier_id=cashier_id, product_id=product_id).first()
             if existing: existing.quantity += 1
-            else: db_session.add(POSCartItem(cashier_id=cashier_id, product_id=product_id, quantity=1))
+            else: db_session.add(Pos_Cart_Item(cashier_id=cashier_id, product_id=product_id, quantity=1))
             db_session.commit()
             msg = "Added+to+POS"
         else: msg = "Out+of+stock"
@@ -907,7 +965,7 @@ def admin_pos_update_item(request, item_id):
     db_session = SessionProd()
     try:
         cashier_id = resolve_staff_cashier_id(db_session, user_id)
-        item = db_session.query(POSCartItem).filter_by(id=item_id, cashier_id=cashier_id).first()
+        item = db_session.query(Pos_Cart_Item).filter_by(id=item_id, cashier_id=cashier_id).first()
         if item:
             if action == "inc": item.quantity += 1
             elif action == "dec":
@@ -923,7 +981,7 @@ def admin_pos_remove_item(request, item_id):
     db_session = SessionProd()
     try:
         cashier_id = resolve_staff_cashier_id(db_session, user_id)
-        item = db_session.query(POSCartItem).filter_by(id=item_id, cashier_id=cashier_id).first()
+        item = db_session.query(Pos_Cart_Item).filter_by(id=item_id, cashier_id=cashier_id).first()
         if item:
             db_session.delete(item)
             db_session.commit()
@@ -936,7 +994,7 @@ def admin_pos_clear(request):
     db_session = SessionProd()
     try:
         cashier_id = resolve_staff_cashier_id(db_session, user_id)
-        db_session.query(POSCartItem).filter_by(cashier_id=cashier_id).delete()
+        db_session.query(Pos_Cart_Item).filter_by(cashier_id=cashier_id).delete()
         db_session.commit()
     finally: db_session.close()
     return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel=pos-panel")
@@ -955,36 +1013,65 @@ def admin_pos_process_sale(request):
     db_session = SessionProd()
     try:
         cashier_id = resolve_staff_cashier_id(db_session, user_id)
-        rows = db_session.query(POSCartItem, Product).join(
-            Product, POSCartItem.product_id == Product.id
-        ).filter(POSCartItem.cashier_id == cashier_id).all()
+        rows = db_session.query(Pos_Cart_Item, Product).join(
+            Product, Pos_Cart_Item.product_id == Product.id
+        ).filter(Pos_Cart_Item.cashier_id == cashier_id).all()
         if not rows:
             return redirect(base_pos_url + "&msg=Cart+empty")
 
-        subtotal = round(sum([(float(p.price or 0) * int(item.quantity or 0)) for item, p in rows]), 2)
+        # Calculate Sticker Total and Item Count
+        sticker_subtotal = round(sum([(float(p.price or 0) * int(item.quantity or 0)) for item, p in rows]), 2)
+        total_qty = sum([int(item.quantity or 0) for item, product in rows])
+
+        # Automated Discount Logic
+        if total_qty >= 5:
+            disc_amt = 100.0
+        elif total_qty >= 3:
+            disc_amt = 75.0
+        elif total_qty > 0:
+            disc_amt = 50.0
+        else:
+            disc_amt = 0.0
+
+        final_total = round(sticker_subtotal - disc_amt, 2)
+        tax_amount = round(final_total - (final_total / 1.12), 2)
+        subtotal = round(final_total - tax_amount, 2)
         sale_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        sale = Sale(cashier_id=cashier_id, customer_id=cust_id, sale_date=sale_date, subtotal=subtotal, total_amount=subtotal, status="Completed", customer_name="Walk-in" if cust_id == 0 else "")
+        
+        sale = Sale(
+            user_id=cashier_id,
+            customer_id=cust_id,
+            sale_date=sale_date,
+            subtotal=subtotal,
+            tax_amount=tax_amount,
+            discount_amount=disc_amt,
+            total_amount=final_total,
+            status="Completed"
+        )
+
         db_session.add(sale)
         db_session.flush()
         lines_for_receipt = []
         for item, product in rows:
             lt = round(float(product.price or 0) * int(item.quantity or 0), 2)
             lines_for_receipt.append({"name": product.name or "Item", "qty": int(item.quantity or 0), "line": lt})
-            db_session.add(SaleItem(sale_id=sale.id, product_id=product.id, quantity=item.quantity, unit_price=product.price, line_total=product.price * item.quantity))
+            db_session.add(Sale_Item(sale_id=sale.id, product_id=product.id, quantity=item.quantity, unit_price=product.price, line_total=product.price * item.quantity))
             product.stock = max(product.stock - item.quantity, 0)
-            db_session.add(StockMovement(product_id=product.id, cashier_id=cashier_id, type="OUT", quantity=item.quantity, reason=f"POS Sale #{sale.id}", moved_at=sale_date))
+            db_session.add(Stock_Movement(product_id=product.id, cashier_id=cashier_id, type="OUT", quantity=item.quantity, reason=f"POS Sale #{sale.id}", moved_at=sale_date))
             db_session.delete(item)
+            
         if cust_id > 0:
             customer = db_session.query(User).filter_by(id=cust_id).first()
             if customer:
-                customer.loyalty_points += compute_points_earned(subtotal)
+                customer.loyalty_points += compute_points_earned(final_total)
+                
         db_session.commit()
 
-        change_due = round(max(amount_tendered - subtotal, 0.0), 2)
+        change_due = round(max(amount_tendered - final_total, 0.0), 2)
         lines_enc = quote(json.dumps(lines_for_receipt), safe="")
         return redirect(
             f"{base_pos_url}&pos_sale=1&sale_id={sale.id}&sale_date={quote_plus(sale_date)}"
-            f"&total={quote_plus(f'{subtotal:.2f}')}&tendered={quote_plus(f'{amount_tendered:.2f}')}"
+            f"&total={quote_plus(f'{final_total:.2f}')}&tendered={quote_plus(f'{amount_tendered:.2f}')}"
             f"&change={quote_plus(f'{change_due:.2f}')}&lines={lines_enc}"
         )
     finally:
@@ -996,8 +1083,8 @@ def admin_customers(request):
     search = (request.args.get("search") or "").strip()
     dbu = SessionUser()
     try:
-        query = dbu.query(User).filter(User.is_admin != 1)
-        if search: query = query.filter(or_(User.name.ilike(f"%{search}%"), User.email.ilike(f"%{search}%")))
+        query = dbu.query(User).filter(User.role != 'admin')
+        if search: query = query.filter(or_(User.first_name.ilike(f"%{search}%"), User.email.ilike(f"%{search}%")))
         users = query.all()
     finally: dbu.close()
     return render("admin/admin_dashboard.html", request, title="Customers", admin_view="customers", customers=users, search_filter=search)
@@ -1023,13 +1110,15 @@ def admin_register_customer(request):
 
         # Admin-created customers get a default password so the record is valid.
         default_password_hash = generate_password_hash("customer123")
+
         dbu.add(User(
-            name=name,
+            first_name=name,
             phone=phone,
             email=email,
             password=default_password_hash,
-            is_admin=0,
+            role='customer',
         ))
+
         dbu.commit()
     finally:
         dbu.close()
@@ -1046,21 +1135,21 @@ def login(request):
         user = db_session.query(User).filter_by(email=email).first()
 
         if user and check_password_hash(user.password, password):
-            is_admin = (user.is_admin == 1)
+            is_admin_access = user.role.lower() in ['admin', 'cashier']
             uid = user.id
             db_session.close()
 
-            if is_admin:
-                target_url = f"/admin_dashboard?admin={is_admin}&user_id={uid}&panel=dashboard-panel"
+            if is_admin_access:
+                target_url = f"/admin_dashboard?admin=True&user_id={uid}&panel=dashboard-panel"
             else:
-                target_url = f"/?admin={is_admin}&user_id={uid}"
+                target_url = f"/products?admin=False&user_id={uid}"
 
             response = redirect(target_url)
             response.set_cookie("user_id", str(uid), max_age=60*60*24*7, httponly=True)
-            response.set_cookie("is_admin", str(is_admin), max_age=60*60*24*7, httponly=True)
+            response.set_cookie("is_admin", str(is_admin_access), max_age=60*60*24*7, httponly=True)
             return response
         else:
-            db_session.close()
+            if db_session: db_session.close()
             error = "Invalid email or password."
     return render("pages/auth/login.html", request, title="Login", error=error)
 
@@ -1103,9 +1192,9 @@ def add_to_cart(request, product_id):
     user_id = get_user_id(request)
     if user_id is None: return redirect("/login")
     db_session = SessionProd()
-    existing = db_session.query(CartItem).filter_by(user_id=user_id, product_id=product_id).first()
+    existing = db_session.query(Cart_Item).filter_by(user_id=user_id, product_id=product_id).first()
     if existing: existing.quantity += 1
-    else: db_session.add(CartItem(user_id=user_id, product_id=product_id, quantity=1))
+    else: db_session.add(Cart_Item(user_id=user_id, product_id=product_id, quantity=1))
     db_session.commit()
     db_session.close()
     return redirect(f"/products?msg=Added&user_id={user_id}&admin={get_is_admin(request)}")
@@ -1114,9 +1203,9 @@ def cart(request):
     user_id = get_user_id(request)
     if user_id is None: return redirect("/login")
     db_session = SessionProd()
-    rows = db_session.query(CartItem, Product).join(
-        Product, CartItem.product_id == Product.id
-    ).filter(CartItem.user_id == user_id).all()
+    rows = db_session.query(Cart_Item, Product).join(
+        Product, Cart_Item.product_id == Product.id
+    ).filter(Cart_Item.user_id == user_id).all()
     items = [{"item": c, "product": p, "subtotal": p.price * c.quantity} for c, p in rows]
     total = sum([i["subtotal"] for i in items])
     db_session.close()
@@ -1126,7 +1215,7 @@ def update_cart_quantity(request, item_id):
     user_id = get_user_id(request)
     action = request.args.get("action", "").lower()
     db_session = SessionProd()
-    item = db_session.query(CartItem).filter_by(id=item_id, user_id=user_id).first()
+    item = db_session.query(Cart_Item).filter_by(id=item_id, user_id=user_id).first()
     if item:
         if action == "inc": item.quantity += 1
         elif action == "dec":
@@ -1139,7 +1228,7 @@ def update_cart_quantity(request, item_id):
 def remove_from_cart(request, item_id):
     user_id = get_user_id(request)
     db_session = SessionProd()
-    item = db_session.query(CartItem).filter_by(id=item_id, user_id=user_id).first()
+    item = db_session.query(Cart_Item).filter_by(id=item_id, user_id=user_id).first()
     if item:
         db_session.delete(item)
         db_session.commit()
@@ -1150,9 +1239,9 @@ def checkout(request):
     user_id = get_user_id(request)
     if user_id is None: return redirect("/login")
     db_session = SessionProd()
-    rows = db_session.query(CartItem, Product).join(
-        Product, CartItem.product_id == Product.id
-    ).filter(CartItem.user_id == user_id).all()
+    rows = db_session.query(Cart_Item, Product).join(
+        Product, Cart_Item.product_id == Product.id
+    ).filter(Cart_Item.user_id == user_id).all()
     if not rows: return redirect("/cart")
     subtotal = sum([p.price * c.quantity for c, p in rows])
     customer = db_session.query(User).filter_by(id=user_id).first()
@@ -1164,11 +1253,21 @@ def checkout(request):
         final_total = max(subtotal - pts_spend, 0)
         cashier_id = resolve_default_online_cashier_id(db_session)
         created_at = datetime.now().strftime("%Y-%m-%d %I:%M %p")
-        sale = Sale(cashier_id=cashier_id, customer_id=user_id, sale_date=created_at, subtotal=subtotal, discount_amount=pts_spend, total_amount=final_total, status="Placed")
+
+        sale = Sale(
+            user_id=cashier_id,
+            customer_id=user_id,
+            sale_date=created_at,
+            subtotal=subtotal,
+            discount_amount=pts_spend,
+            total_amount=final_total,
+            status="Placed"
+        )
+        
         db_session.add(sale)
         db_session.flush()
         for c, p in rows:
-            db_session.add(SaleItem(sale_id=sale.id, product_id=p.id, quantity=c.quantity, unit_price=p.price, line_total=p.price * c.quantity))
+            db_session.add(Sale_Item(sale_id=sale.id, product_id=p.id, quantity=c.quantity, unit_price=p.price, line_total=p.price * c.quantity))
             p.stock -= c.quantity
             db_session.delete(c)
         customer.loyalty_points = max(avail_pts - pts_spend, 0) + compute_points_earned(final_total)
@@ -1222,8 +1321,6 @@ def add_product(request):
 
             category_id = category.id
 
-            # supplier_id is also NOT NULL in the DB, but the form does not submit it.
-            # Use an existing supplier from products in the same category when available.
             supplier_row = (
                 db_session.query(Product.supplier_id)
                 .filter(Product.category_id == category_id)
@@ -1234,12 +1331,11 @@ def add_product(request):
 
             supplier_id = (supplier_row[0] if supplier_row and supplier_row[0] is not None else None)
             if supplier_id is None:
-                # Fallback: use the first supplier in the system.
                 first_supplier = db_session.query(Supplier).order_by(Supplier.id.asc()).first()
                 supplier_id = (first_supplier.id if first_supplier else 1)
 
             new_p = Product(
-                name=name,
+                first_name=name,
                 brand=brand,
                 price=price,
                 stock=stock,
@@ -1282,14 +1378,12 @@ def edit_product(request, id):
             if price_raw is not None and str(price_raw).strip() != "":
                 product.price = float(price_raw)
         except (TypeError, ValueError):
-            # Keep existing value if malformed input comes in.
             pass
 
         try:
             if stock_raw is not None and str(stock_raw).strip() != "":
                 product.stock = int(float(stock_raw))
         except (TypeError, ValueError):
-            # Keep existing value if stock field is missing/invalid.
             pass
 
         db_session.commit()
@@ -1317,11 +1411,20 @@ def register(request):
             error = "Email exists."
         else:
             hashed = generate_password_hash(password)
-            db_session.add(User(name=request.form.get("name"), email=email, password=hashed))
+            db_session.add(User(first_name=request.form.get("name"), email=email, password=hashed, role='customer'))
             db_session.commit()
             success = "Done."
         db_session.close()
     return render("pages/auth/register.html", request, title="Register", error=error, success=success)
+
+def api_barcode_lookup(request):
+    barcode = request.args.get("barcode", "").strip()
+    db = SessionProd()
+    product = db.query(Product).filter(Product.barcode == barcode).first()
+    db.close()
+    if product:
+        return Response(json.dumps({"id": product.id}), status=200, content_type="application/json")
+    return Response(json.dumps({"error": "Not found"}), status=404, content_type="application/json")
 
 def contactus(request): return render("pages/info/contactus.html", request)
 def thecompany(request): return render("pages/info/thecompany.html", request)
@@ -1334,9 +1437,9 @@ def orders(request):
     order_rows = db_session.query(Sale).filter_by(customer_id=user_id).order_by(Sale.id.desc()).all()
     results = []
     for o in order_rows:
-        items = db_session.query(SaleItem, Product).join(
-            Product, SaleItem.product_id == Product.id
-        ).filter(SaleItem.sale_id == o.id).all()
+        items = db_session.query(Sale_Item, Product).join(
+            Product, Sale_Item.product_id == Product.id
+        ).filter(Sale_Item.sale_id == o.id).all()
         order_items = []
         for sale_item, product in items:
             qty = int(sale_item.quantity or 0)

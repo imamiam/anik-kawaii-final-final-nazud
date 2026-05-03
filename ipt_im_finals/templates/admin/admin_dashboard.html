@@ -3188,10 +3188,12 @@
               {% endfor %}
             </select>
           </div>
-          {% set pos_total = (all_products|length if all_products else 0) %}
           <div class="pos-product-grid" id="posProductGrid">
             {% for p in all_products %}
-            <form method="post" action="{{ base_url }}/admin/pos/add/{{ p.id }}?admin={{ is_admin }}&user_id={{ user_id }}&panel=pos-panel" data-pos-name="{{ (p.name or '')|lower }}" data-pos-category="{{ (p.category or '')|lower }}">
+              <form method="post" action="{{ base_url }}/admin/pos/add/{{ p.id }}?admin={{ is_admin }}&user_id={{ user_id }}&panel=pos-panel" 
+                    data-pos-name="{{ (p.name or '')|lower }}" 
+                    data-pos-sku="{{ (p.sku or '')|lower }}" 
+                    data-pos-category="{{ (p.category or '')|lower }}">
               <button type="submit" class="pos-product-btn" {% if (p.stock or 0) <= 0 %}disabled{% endif %}>
                 <span class="pos-product-thumb-wrap">
                   <img class="pos-product-thumb" src="{{ base_url }}/static/img/products/{{ p.image or 'placeholder.png' }}" alt="{{ p.name }}">
@@ -3267,10 +3269,20 @@
           {% endif %}
 
           <div class="pos-summary">
-            <div class="pos-summary-row"><span>Subtotal</span><span>₱{{ "%.2f"|format(pos_subtotal or 0) }}</span></div>
-            <div class="pos-summary-row"><span>Discount</span><span>₱0.00</span></div>
-            <div class="pos-summary-row"><span>Tax</span><span>₱0.00</span></div>
-            <div class="pos-summary-total"><span>TOTAL</span><span>₱{{ "%.2f"|format(pos_subtotal or 0) }}</span></div>
+            <div class="pos-summary-row">
+              <span>Subtotal (Net)</span>
+              <span>₱{{ "%.2f"|format(pos_net_subtotal or 0) }}</span>
+            </div>
+            <div class="pos-summary-row">
+              <span>Discount</span>
+              <span class="text-danger">-₱{{ "%.2f"|format(pos_discount or 0) }}</span>
+            </div>
+            <div class="pos-summary-row">
+              <span>VAT (12% Incl.)</span><span>₱{{ "%.2f"|format(pos_tax or 0) }}</span>
+            </div>
+            <div class="pos-summary-total">
+             <span>TOTAL</span>
+            <span>₱{{ "%.2f"|format(pos_total or 0) }}</span>
           </div>
 
           <form method="post" action="{{ base_url }}/admin/pos/process?admin={{ is_admin }}&user_id={{ user_id }}" class="pos-checkout">
@@ -3811,15 +3823,23 @@
                       </td>
                       <td class="sales-td-end fw-semibold">₱{{ "%.2f"|format(row.sale.total_amount or 0) }}</td>
                       <td class="sales-td-end text-muted">{{ row.sale.sale_date or "—" }}</td>
+                      <td class="sales-td-end">
+                        {% if sale_status != 'cancelled' %}
+                        <form action="{{ base_url }}/admin/sales/{{ row.sale.id }}/cancel?admin={{ is_admin }}&user_id={{ user_id }}&panel=sales-panel" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 0.7rem; font-weight: 700;" onclick="return confirm('Undo this purchase and return items to stock?')">
+                                UNDO
+                            </button>
+                        </form>
+                        {% endif %}
+                      </td>
                     </tr>
                   {% endfor %}
                 {% else %}
-                  <tr><td colspan="4" class="text-center text-muted py-4">No sales orders yet.</td></tr>
+                  <tr><td colspan="5" class="text-center text-muted py-4">No sales orders yet.</td></tr>
                 {% endif %}
               </tbody>
             </table>
           </div>
-
           <div class="sales-table-footer">
             <div class="sales-results-text">
               Showing {{ (1 if sales_total > 0 else 0) }} to {{ (10 if sales_total > 10 else sales_total) }} of {{ sales_total }} results
@@ -4233,15 +4253,17 @@
     const pageSize = 9;
     let currentPage = 1;
 
-    function getFilteredCards() {
+function getFilteredCards() {
       const q = (searchInput.value || "").trim().toLowerCase();
       const cat = (categoryFilter.value || "").trim().toLowerCase();
       return cards.filter(function (card) {
         const name = card.getAttribute("data-pos-name") || "";
+        const sku = card.getAttribute("data-pos-sku") || ""; // NEW
         const category = card.getAttribute("data-pos-category") || "";
-        const matchName = !q || name.includes(q);
+        const matchSearch = !q || name.includes(q) || sku.includes(q); 
         const matchCat = !cat || category === cat;
-        return matchName && matchCat;
+        
+        return matchSearch && matchCat;
       });
     }
 

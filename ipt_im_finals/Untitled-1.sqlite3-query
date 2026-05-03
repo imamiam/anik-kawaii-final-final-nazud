@@ -1,15 +1,12 @@
 -- database: ./anik_shop.db
 
--- 1. Mass-populate all cost prices as 65% of the selling price
--- This ensures every single item now has a value
-UPDATE product 
-SET cost_price = ROUND(selling_price * 0.65, 2);
+-- 1. Transfer the data from the old table to the correct table
+INSERT INTO po_item (po_item_id, po_id, product_id, qty_ordered, qty_received, unit_cost)
+SELECT po_item_id, po_id, product_id, qty_ordered, qty_received, unit_cost
+FROM purchase_order_item;
 
--- 2. (Optional) Fine-tune specific items if you want exact numbers
-UPDATE product SET cost_price = 95.00 WHERE name LIKE '%My Melody%';
-UPDATE product SET cost_price = 75.00 WHERE name LIKE '%Kirby%';
-UPDATE product SET cost_price = 550.00 WHERE name LIKE '%Sora%';
-UPDATE product SET cost_price = 225.00 WHERE name LIKE '%Chopper%';
+-- 2. Verify the data is moved (Optional: run this first to be sure)
+-- SELECT * FROM po_item;
 
--- 3. Verify the changes
-SELECT name, selling_price, cost_price FROM product;
+-- 3. Delete the unnecessary table
+DROP TABLE purchase_order_item;
