@@ -803,10 +803,21 @@
   }
 
   .pos-grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.45rem;
-    margin-bottom: 0.5rem;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.75rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .search-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0; 
+  }
+
+  input::-webkit-calendar-picker-indicator {
+    opacity: 0;
   }
 
   .pos-checkout label {
@@ -2614,7 +2625,6 @@
     }
 
     .pos-catalog-head,
-    .pos-grid-2,
     .pos-product-grid {
       grid-template-columns: 1fr;
     }
@@ -3190,9 +3200,11 @@
           </div>
           <div class="pos-product-grid" id="posProductGrid">
             {% for p in all_products %}
-              <form method="post" action="{{ base_url }}/admin/pos/add/{{ p.id }}?admin={{ is_admin }}&user_id={{ user_id }}&panel=pos-panel" 
+              <form method="post" 
+                    action="{{ base_url }}/admin/pos/add/{{ p.id }}?admin={{ is_admin }}&user_id={{ user_id }}&panel=pos-panel" 
                     data-pos-name="{{ (p.name or '')|lower }}" 
                     data-pos-sku="{{ (p.sku or '')|lower }}" 
+                    data-pos-barcode="{{ (p.barcode or '')|lower }}" 
                     data-pos-category="{{ (p.category or '')|lower }}">
               <button type="submit" class="pos-product-btn" {% if (p.stock or 0) <= 0 %}disabled{% endif %}>
                 <span class="pos-product-thumb-wrap">
@@ -3285,40 +3297,51 @@
             <span>₱{{ "%.2f"|format(pos_total or 0) }}</span>
           </div>
 
-          <form method="post" action="{{ base_url }}/admin/pos/process?admin={{ is_admin }}&user_id={{ user_id }}" class="pos-checkout">
-            <div class="pos-grid-2">
-              <div>
-                <label>Cashier ID</label>
-                <input type="text" class="form-control form-control-sm" value="{{ pos_cashier_id or 1 }}" readonly>
+          <form method="post" action="{{ base_url }}/admin/pos/process?admin={{ is_admin }}&user_id={{ user_id }}" class="pos-checkout px-3">
+              <div class="pos-grid-2">
+                  <div class="search-container">
+                      <label class="fw-bold small mb-1">BARCODE / SKU</label>
+                      <input type="text" id="barcodeFilterInput" list="barcodeSuggestions" 
+                            class="form-control form-control-sm" placeholder="Search..." autofocus>
+                      <datalist id="barcodeSuggestions">
+                          {% for p in all_products %}<option value="{{ p.barcode }}">{{ p.name }}</option>{% endfor %}
+                      </datalist>
+                  </div>
+                  <div class="search-container">
+                      <label class="fw-bold small mb-1">CUSTOMER SEARCH (OPT.)</label>
+                      <input type="text" id="customerSearchInput" name="customer_identity" list="customerSuggestions" 
+                            class="form-control form-control-sm" placeholder="Email/Phone...">
+                      <datalist id="customerSuggestions">
+                          {% for c in customers %}<option value="{{ c.email }}">{{ c.first_name }} {{ c.last_name }}</option>{% endfor %}
+                      </datalist>
+                  </div>
               </div>
-              <div>
-                <label>Customer ID (opt.)</label>
-                <input id="posCustomerId" name="customer_id" type="text" class="form-control form-control-sm" value="" placeholder="Leave blank">
+
+              <div class="pos-grid-2 mt-2">
+                  <div>
+                      <label class="fw-bold small mb-1">PAYMENT METHOD</label>
+                      <select class="form-select form-select-sm" name="payment_method">
+                          <option value="Cash">Cash</option>
+                          <option value="GCash">GCash</option>
+                          <option value="Card">Card</option>
+                      </select>
+                  </div>
+                  <div>
+                      <label class="fw-bold small mb-1">AMOUNT TENDERED</label>
+                      <input type="number" step="0.01" class="form-control form-control-sm" value="0.00" name="amount_tendered">
+                  </div>
               </div>
-            </div>
-            <div class="pos-grid-2">
-              <div>
-                <label>Payment Method</label>
-                <select class="form-select form-select-sm" name="payment_method">
-                  <option value="Cash">Cash</option>
-                  <option value="GCash">GCash</option>
-                  <option value="Card">Card</option>
-                </select>
+
+              <div class="d-grid gap-2 mt-3">
+                  <button type="submit" class="btn btn-success fw-bold py-2">Process Sale</button>
               </div>
-              <div>
-                <label>Amount Tendered</label>
-                <input type="text" class="form-control form-control-sm" value="0.00" name="amount_tendered">
-              </div>
-            </div>
-            <button type="submit" class="btn btn-success w-100">Process Sale</button>
           </form>
 
           <form method="post" action="{{ base_url }}/admin/pos/clear?admin={{ is_admin }}&user_id={{ user_id }}" class="px-3 pb-3">
-            <button type="submit" class="btn btn-outline-secondary w-100">Clear Cart</button>
-          </form>
-        </div>
-      </div>
-    </section>
+              <div class="d-grid">
+                  <button type="submit" class="btn btn-outline-secondary py-2">Clear Cart</button>
+              </div>
+          </form> 
 
     <div class="modal fade" id="posSaleCompleteModal" tabindex="-1" aria-labelledby="posSaleCompleteLabel" aria-hidden="true" data-bs-backdrop="static">
       <div class="modal-dialog modal-dialog-centered modal-md">
@@ -3349,6 +3372,10 @@
         </div>
       </div>
     </div>
+
+        </div> 
+      </div> 
+    </section>
 
     <section id="products-panel" class="admin-main-panel admin-panel" hidden>
       <div class="products-panel-shell">
@@ -3484,8 +3511,6 @@
             <option value="">All Types</option>
             <option value="IN">IN</option>
             <option value="OUT">OUT</option>
-            <option value="Restock">Restock</option>
-            <option value="Deduct">Deduct</option>
           </select>
         </div>
 
@@ -3883,6 +3908,7 @@
         </table>
       </div>
     </section>
+
   </div>
 </div>
 
@@ -4134,13 +4160,13 @@
     };
 
     function setActivePanel(targetId) {
-      navLinks.forEach(function (link) {
+    navLinks.forEach(function (link) {
         const active = link.getAttribute("data-target") === targetId;
         link.classList.toggle("active", active);
-      });
-      panels.forEach(function (panel) {
+       });
+    panels.forEach(function (panel) {
         panel.hidden = panel.id !== targetId;
-      });
+       });
       if (topbarTitle) {
         const meta = panelMeta[targetId] || panelMeta["dashboard-panel"];
         if (topbarIcon) topbarIcon.className = "nav-glyph " + meta.icon;
@@ -4253,19 +4279,32 @@
     const pageSize = 9;
     let currentPage = 1;
 
+const barcodeFilter = document.getElementById("barcodeFilterInput");
+
 function getFilteredCards() {
-      const q = (searchInput.value || "").trim().toLowerCase();
-      const cat = (categoryFilter.value || "").trim().toLowerCase();
-      return cards.filter(function (card) {
+    const q = (document.getElementById("posSearchInput").value || "").trim().toLowerCase();
+    const b = (document.getElementById("barcodeFilterInput").value || "").trim().toLowerCase();
+    const cat = (document.getElementById("posCategoryFilter").value || "").trim().toLowerCase();
+
+    return cards.filter(function (card) {
         const name = card.getAttribute("data-pos-name") || "";
-        const sku = card.getAttribute("data-pos-sku") || ""; // NEW
+        const sku = card.getAttribute("data-pos-sku") || "";
+        const barcode = card.getAttribute("data-pos-barcode") || "";
         const category = card.getAttribute("data-pos-category") || "";
-        const matchSearch = !q || name.includes(q) || sku.includes(q); 
-        const matchCat = !cat || category === cat;
         
-        return matchSearch && matchCat;
-      });
-    }
+        const matchBarcode = !b || barcode.startsWith(b) || sku.startsWith(b);
+        const matchSearch = !q || name.includes(q) || sku.includes(q);
+        const matchCat = !cat || category === cat;
+
+        return matchBarcode && matchSearch && matchCat;
+    });
+}
+
+    // Listen for typing in the new barcode box
+    barcodeFilter.addEventListener("input", () => {
+        currentPage = 1;
+        renderPosPage();
+    });
 
     function renderPosPage() {
       const filtered = getFilteredCards();

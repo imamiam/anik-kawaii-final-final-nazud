@@ -1,12 +1,28 @@
 -- database: ./anik_shop.db
 
--- 1. Transfer the data from the old table to the correct table
-INSERT INTO po_item (po_item_id, po_id, product_id, qty_ordered, qty_received, unit_cost)
-SELECT po_item_id, po_id, product_id, qty_ordered, qty_received, unit_cost
-FROM purchase_order_item;
+-- Recreate the sale table to ensure correct constraints and columns
+CREATE TABLE sale_new (
+    sale_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES user(user_id), -- The Cashier
+    customer_id INTEGER NOT NULL REFERENCES user(user_id), -- The Buyer (Defaults to 0)
+    discount_id INTEGER REFERENCES discount(discount_id),
+    total_amount REAL,
+    sale_date DATETIME,
+    subtotal FLOAT DEFAULT 0.0,
+    discount_amount FLOAT DEFAULT 0.0,
+    tax_amount FLOAT DEFAULT 0.0,
+    payment_method TEXT DEFAULT "Cash",
+    amount_tendered FLOAT DEFAULT 0.0,
+    change_given FLOAT DEFAULT 0.0,
+    status TEXT DEFAULT "Placed",
+    delivery_street TEXT DEFAULT "N/A",
+    delivery_city TEXT DEFAULT "N/A",
+    delivery_zip TEXT DEFAULT "N/A"
+);
 
--- 2. Verify the data is moved (Optional: run this first to be sure)
--- SELECT * FROM po_item;
+-- Transfer all existing data
+INSERT INTO sale_new SELECT * FROM sale;
 
--- 3. Delete the unnecessary table
-DROP TABLE purchase_order_item;
+-- Swap the tables
+DROP TABLE sale;
+ALTER TABLE sale_new RENAME TO sale;

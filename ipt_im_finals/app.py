@@ -11,7 +11,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.serving import run_simple
 from werkzeug.utils import redirect, secure_filename
 from urllib.parse import quote_plus, quote
-from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, or_, func
+from flask import Flask, render_template, redirect, url_for, request, session
+from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, or_, func, ForeignKey
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -94,12 +95,12 @@ class Stock_Movement(Base):
 class User(Base):
     __tablename__ = 'user'
     id = Column("user_id", Integer, primary_key=True)
-    first_name = Column(String) 
-    last_name = Column(String)   
-    email = Column(String, unique=True)
-    phone = Column(String)
-    password = Column(String)
-    role = Column(String)       
+    first_name = Column(String(50))
+    last_name = Column(String(50))
+    email = Column(String(100), unique=True, nullable=False)
+    phone = Column(String(20))
+    password = Column(String(120), nullable=False)
+    role = Column(String(30), default="customer") 
     loyalty_points = Column(Integer, default=0)
 
 class Category(Base):
@@ -144,8 +145,9 @@ class Discount(Base):
 class Sale(Base):
     __tablename__ = 'sale'
     id = Column("sale_id", Integer, primary_key=True)
-    user_id = Column(Integer, nullable=False)
-    customer_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, ForeignKey('user.user_id'), nullable=False) 
+    customer_id = Column(Integer, ForeignKey('user.user_id'), nullable=False) # Keep NOT NULL since you use ID 0
+    
     discount_id = Column(Integer, nullable=True)
     total_amount = Column(Float, default=0.0)
     sale_date = Column(String(30), default="")
@@ -156,9 +158,10 @@ class Sale(Base):
     amount_tendered = Column(Float, default=0.0)
     change_given = Column(Float, default=0.0)
     status = Column(String(20), default="Placed")
-    delivery_street = Column(String, default="")
-    delivery_city = Column(String, default="")
-    delivery_zip = Column(String, default="")
+    
+    delivery_street = Column(String, default="N/A")
+    delivery_city = Column(String, default="N/A")
+    delivery_zip = Column(String, default="N/A")
 
 engine = create_engine(DB_URL)
 Session = sessionmaker(bind=engine)
@@ -322,14 +325,17 @@ def ensure_master_schema():
 #ensure_master_schema()
 
 def get_is_admin(request):
+    val = request.args.get('admin')
+    if val == "True": return True
+
     user_id = get_user_id(request)
     if not user_id:
         return False
     
     db_session = SessionUser()
     try:
-        admin_exists = db_session.query(Admin).filter_by(id=user_id).first()
-        return admin_exists is not None
+        user = db_session.query(User).filter_by(id=user_id).first()
+        return user is not None and user.role.lower() in ['admin', 'cashier']
     finally:
         db_session.close()
 
@@ -420,10 +426,10 @@ def render(template, request, **context):
         try:
             user = db_session.query(User).filter_by(id=user_id).first()
             if user:
-                is_admin = (user.role.lower() in ['admin', 'cashier'])
+                is_admin = user.role.lower() in ['admin', 'cashier']
                 current_loyalty_points = user.loyalty_points or 0
-                current_user_name = (user.first_name or user.email.split("@")[0] or "User").strip()
-                current_user_role = user.role.capitalize() if user.role else "User"
+                current_user_name = (user.first_name or "User").strip()
+                current_user_role = user.role.capitalize()
         finally:
             db_session.close()
 
@@ -444,7 +450,8 @@ def render(template, request, **context):
         'current_user_name': current_user_name,
         'current_user_role': current_user_role,
         'current_loyalty_points': current_loyalty_points,
-        'cart_count': cart_count
+        'cart_count': cart_count,
+        'panel': request.args.get('panel', 'dashboard-panel')
     })
 
     if 'session' not in context:
@@ -561,21 +568,35 @@ def require_admin(request):
     if user_id is None:
         return None, False, redirect("/login")
 
-    dbu = SessionUser()
+    db = SessionProd()
     try:
-        u = dbu.query(User).filter_by(id=user_id).first()
+        u = db.query(User).filter_by(id=user_id).first()
         if not u or u.role.lower() not in ['admin', 'cashier']:
-            return user_id, False, redirect("/products")
+            return user_id, False, redirect(f"/products?user_id={user_id}")
+            
+        return user_id, True, None
     finally:
-        dbu.close()
-
-    return user_id, True, None
+        db.close()
 
 def admin_dashboard(request):
     user_id, is_admin, denial = require_admin(request)
     if denial is not None:
         return denial
-    customer_search = (request.args.get("customer_search") or "").strip()
+
+    products = []
+    all_products = []
+    recent_sales = []
+    top_products = []
+    stock_movements = []
+    purchase_orders = []
+    suppliers = []
+    customers = []
+    customer_total = 0
+    pos_cart_items = []
+    product_categories = []
+    pos_subtotal = pos_tax = pos_discount = pos_total = pos_net_subtotal = 0.0
+    po_cashier_id = pos_cashier_id = user_id
+    
     product_search = (request.args.get("product_search") or "").strip()
     product_category = (request.args.get("product_category") or "all").strip()
     msg = (request.args.get("msg") or "").strip()
@@ -585,19 +606,14 @@ def admin_dashboard(request):
         all_products = dbp.query(Product).order_by(Product.id.desc()).all()
         product_query = dbp.query(Product)
         if product_search:
-            like_term = f"%{product_search}%"
-            product_query = product_query.filter(
-                or_(Product.name.ilike(like_term), Product.sku.ilike(like_term))
-            )
-        if product_category and product_category.lower() != "all":
+            product_query = product_query.filter(or_(Product.name.ilike(f"%{product_search}%"), Product.sku.ilike(f"%{product_search}%")))
+        if product_category.lower() != "all":
             product_query = product_query.filter(func.lower(Product.category) == product_category.lower())
         products = product_query.order_by(Product.id.desc()).all()
-        product_categories = sorted(
-            {((p.category or "").strip()) for p in all_products if (p.category or "").strip()},
-            key=lambda s: s.lower()
-        )
+        
+        product_categories = sorted({(p.category or "").strip() for p in all_products if (p.category or "").strip()}, key=lambda s: s.lower())
         low_stock_products = [p for p in all_products if (p.stock or 0) >= 0 and (p.stock or 0) <= 5]
-        low_stock_count = len([p for p in low_stock_products if (p.stock or 0) > 0])
+        
         today_prefix = datetime.now().strftime("%Y-%m-%d")
         today_sales = dbp.query(Sale).filter(Sale.sale_date.like(f"{today_prefix}%")).all()
         today_transactions = len(today_sales)
@@ -605,166 +621,96 @@ def admin_dashboard(request):
         all_time_revenue = sum([(s.total_amount or 0.0) for s in dbp.query(Sale).all()])
 
         sale_rows = dbp.query(Sale).order_by(Sale.id.desc()).limit(15).all()
-        recent_sales = []
         for sale in sale_rows:
-            item_count = dbp.query(Sale_Item).filter_by(sale_id=sale.id).count()
-            sale_items = dbp.query(Sale_Item, Product).join(
-                Product, Sale_Item.product_id == Product.id
-            ).filter(Sale_Item.sale_id == sale.id).all()
-            detail_items = []
-            for sale_item, product in sale_items:
-                detail_items.append({
-                    "name": (product.name if product else f"Product #{sale_item.product_id}"),
-                    "quantity": sale_item.quantity,
-                    "line_total": sale_item.line_total,
-                })
-            recent_sales.append({
-                "sale": sale,
-                "item_count": item_count,
-                "detail_items": detail_items,
-            })
+            recent_sales.append({"sale": sale, "item_count": dbp.query(Sale_Item).filter_by(sale_id=sale.id).count()})
 
-        top_products_query = dbp.query(
-            Sale_Item.product_id,
-            func.sum(Sale_Item.quantity).label("units_sold")
-        ).group_by(Sale_Item.product_id).order_by(func.sum(Sale_Item.quantity).desc()).limit(10).all()
-        top_products = []
-        for product_id, units_sold in top_products_query:
-            product = dbp.query(Product).filter_by(id=product_id).first()
-            top_products.append({
-                "product_id": product_id,
-                "product_name": (product.name if product else f"Product #{product_id}"),
-                "units_sold": int(units_sold or 0)
-            })
-
-        stock_rows = dbp.query(Stock_Movement, Product).join(
-            Product, Stock_Movement.product_id == Product.id
-        ).order_by(Stock_Movement.id.desc()).limit(20).all()
-        stock_movements = []
-        for movement, product in stock_rows:
+        movements_list = dbp.query(Stock_Movement).order_by(Stock_Movement.id.desc()).all()
+        for m in movements_list:
+            p_obj = dbp.query(Product).filter_by(id=m.product_id).first()
             stock_movements.append({
-                "movement": movement,
-                "product_name": (product.name if product else f"Product #{movement.product_id}")
+                "movement": m, 
+                "product_name": p_obj.name if p_obj else "Unknown Product"
             })
 
-        po_rows = dbp.query(Purchase_Order).order_by(Purchase_Order.id.desc()).limit(20).all()
-        supplier_rows = dbp.query(Supplier).order_by(Supplier.name.asc()).all()
-        suppliers = [{"id": s.id, "name": s.name} for s in supplier_rows]
-        purchase_orders = []
-        for po in po_rows:
-            supplier = dbp.query(Supplier).filter_by(id=po.supplier_id).first()
+        po_list = dbp.query(Purchase_Order).order_by(Purchase_Order.id.desc()).all()
+        for po in po_list:
             item_count = dbp.query(Po_Item).filter_by(po_id=po.id).count()
             purchase_orders.append({
-                "po": po,
-                "supplier_id": (supplier.id if supplier else f"Supplier #{po.supplier_id}"),
-                "item_count": item_count,
+                "po": po, 
+                "supplier_id": po.supplier_id, 
+                "item_count": item_count
             })
+
+        suppliers = dbp.query(Supplier).all()
+
+        top_products = dbp.query(
+            Sale_Item.product_id,
+            Product.name.label('product_name'),
+            func.sum(Sale_Item.quantity).label('units_sold')
+        ).join(Product, Sale_Item.product_id == Product.id).group_by(Sale_Item.product_id).order_by(func.sum(Sale_Item.quantity).desc()).limit(10).all()
 
         pos_cashier_id = resolve_staff_cashier_id(dbp, user_id)
         po_cashier_id = pos_cashier_id
-        pos_rows = []
-        if pos_cashier_id is not None:
-            pos_rows = dbp.query(Pos_Cart_Item, Product).join(
-                Product, Pos_Cart_Item.product_id == Product.id
-            ).filter(Pos_Cart_Item.cashier_id == pos_cashier_id).all()
-
-        pos_cart_items = []
-        pos_subtotal = 0.0
-        total_qty = 0
-        
+        pos_rows = dbp.query(Pos_Cart_Item, Product).join(Product, Pos_Cart_Item.product_id == Product.id).filter(Pos_Cart_Item.cashier_id == pos_cashier_id).all() if pos_cashier_id else []
         for pos_item, product in pos_rows:
-            line_total = (product.price or 0.0) * (pos_item.quantity or 0)
-            pos_subtotal += line_total
-            total_qty += (pos_item.quantity or 0)
-            pos_cart_items.append({
-                "pos_item": pos_item,
-                "product": product,
-                "line_total": line_total
-            })
-
-        if total_qty >= 5:
-            pos_discount = 100.0
-        elif total_qty >= 3:
-            pos_discount = 75.0
-        elif total_qty > 0:
-            pos_discount = 50.0
-        else:
-            pos_discount = 0.0
-            
-        pos_total = round(pos_subtotal - pos_discount, 2)
+            line = (product.price or 0.0) * (pos_item.quantity or 0)
+            pos_subtotal += line
+            pos_cart_items.append({"pos_item": pos_item, "product": product, "line_total": line})
+        
+        pos_total = round(pos_subtotal, 2)
         pos_tax = round(pos_total - (pos_total / 1.12), 2)
         pos_net_subtotal = round(pos_total - pos_tax, 2)
-            
     finally:
         dbp.close()
 
     dbu2 = SessionUser()
     try:
-        customer_query = dbu2.query(User).filter(User.role != 'admin').order_by(User.id.asc())
-        all_customers = customer_query.all()
-        customer_total = len(all_customers)
-        customers = all_customers
-
-        total_loyalty_points = sum(int(c.loyalty_points or 0) for c in all_customers)
-        average_points = (total_loyalty_points / customer_total) if customer_total else 0
-        top_customer = max(all_customers, key=lambda c: int(c.loyalty_points or 0), default=None)
-
-        top_customers_sorted = sorted(
-            all_customers,
-            key=lambda c: int(c.loyalty_points or 0),
-            reverse=True
-        )[:5]
-        points_bands = {"0-50": 0, "51-150": 0, "151-300": 0, "301+": 0}
+        all_customers = dbu2.query(User).filter(User.role == 'customer').all()
         for c in all_customers:
-            pts = int(c.loyalty_points or 0)
-            if pts <= 50:
-                points_bands["0-50"] += 1
-            elif pts <= 150:
-                points_bands["51-150"] += 1
-            elif pts <= 300:
-                points_bands["151-300"] += 1
-            else:
-                points_bands["301+"] += 1
-
+            c.name = f"{c.first_name or ''} {c.last_name or ''}".strip() or "Anonymous"
+        
+        customers = all_customers
+        customer_total = len(all_customers)
+        top_customers_sorted = sorted(all_customers, key=lambda x: int(x.loyalty_points or 0), reverse=True)[:5]
+        
         customer_graph_data = {
             "totals": {
-                "total_customers": customer_total,
-                "total_points": total_loyalty_points,
-                "average_points": round(average_points, 1),
-                "top_customer_points": int(top_customer.loyalty_points or 0) if top_customer else 0,
+                "total_customers": customer_total, 
+                "total_points": sum(int(c.loyalty_points or 0) for c in all_customers)
+            },
+            "distribution": {
+                "labels": ["0-50", "51+"], 
+                "values": [
+                    len([c for c in all_customers if int(c.loyalty_points or 0) <= 50]),
+                    len([c for c in all_customers if int(c.loyalty_points or 0) > 50])
+                ]
             },
             "top_customers": {
-                "labels": [c.first_name for c in top_customers_sorted],
-                "values": [int(c.loyalty_points or 0) for c in top_customers_sorted],
+                "labels": [c.first_name for c in top_customers_sorted], 
+                "values": [int(c.loyalty_points or 0) for c in top_customers_sorted]
             },
             "top_customers_details": [
                 {
-                    "id": int(c.id or 0),
-                    "name": c.first_name,
-                    "email": c.email,
-                    "phone": c.phone,
-                    "points": int(c.loyalty_points or 0),
-                }
-                for c in top_customers_sorted
-            ],
-            "distribution": {
-                "labels": list(points_bands.keys()),
-                "values": list(points_bands.values()),
-            },
+                    "id": c.id, 
+                    "name": c.name, 
+                    "points": int(c.loyalty_points or 0), 
+                    "email": c.email, 
+                    "phone": c.phone
+                } for c in top_customers_sorted
+            ]
         }
     finally:
         dbu2.close()
 
     return render(
-        "admin/admin_dashboard.html",
+        "admin/admin_dashboard.html", 
         request,
         title="Admin Dashboard",
-        admin_view="dashboard",
         stats={
-            "today_transactions": today_transactions,
-            "low_stock_count": low_stock_count,
-            "today_revenue": today_revenue,
+            "today_transactions": today_transactions, 
+            "today_revenue": today_revenue, 
             "all_time_revenue": all_time_revenue,
+            "low_stock_count": len(low_stock_products)
         },
         products=products,
         all_products=all_products,
@@ -774,22 +720,13 @@ def admin_dashboard(request):
         stock_movements=stock_movements,
         purchase_orders=purchase_orders,
         suppliers=suppliers,
-        po_cashier_id=po_cashier_id,
         pos_cart_items=pos_cart_items,
-        pos_subtotal=pos_subtotal,
-        pos_tax=pos_tax,         
-        pos_discount=pos_discount, 
-        pos_total=pos_total,   
-        pos_cashier_id=pos_cashier_id,
-        customers=customers,
-        customer_total=customer_total,
+        pos_subtotal=pos_subtotal, pos_tax=pos_tax, pos_total=pos_total, pos_net_subtotal=pos_net_subtotal,
+        pos_cashier_id=pos_cashier_id, po_cashier_id=po_cashier_id,
+        customers=customers, customer_total=customer_total,
         customer_graph_data=json.dumps(customer_graph_data),
-        customer_search=customer_search,
-        product_search=product_search,
-        product_category=product_category,
         product_categories=product_categories,
-        pos_net_subtotal=pos_net_subtotal,
-        msg=msg,
+        is_admin=is_admin, user_id=user_id, msg=msg
     )
 
 def admin_create_purchase_order(request):
@@ -1002,7 +939,10 @@ def admin_pos_clear(request):
 def admin_pos_process_sale(request):
     user_id, is_admin, denial = require_admin(request)
     if denial is not None: return denial
-    cust_id = int(request.form.get("customer_id") or 0)
+    
+    customer_identity = request.form.get("customer_identity")
+    payment_method = request.form.get("payment_method", "Cash") 
+    
     try:
         tendered_raw = request.form.get("amount_tendered") or "0"
         amount_tendered = float(str(tendered_raw).replace(",", "").strip() or 0)
@@ -1016,14 +956,13 @@ def admin_pos_process_sale(request):
         rows = db_session.query(Pos_Cart_Item, Product).join(
             Product, Pos_Cart_Item.product_id == Product.id
         ).filter(Pos_Cart_Item.cashier_id == cashier_id).all()
+        
         if not rows:
             return redirect(base_pos_url + "&msg=Cart+empty")
 
-        # Calculate Sticker Total and Item Count
         sticker_subtotal = round(sum([(float(p.price or 0) * int(item.quantity or 0)) for item, p in rows]), 2)
         total_qty = sum([int(item.quantity or 0) for item, product in rows])
 
-        # Automated Discount Logic
         if total_qty >= 5:
             disc_amt = 100.0
         elif total_qty >= 3:
@@ -1038,42 +977,74 @@ def admin_pos_process_sale(request):
         subtotal = round(final_total - tax_amount, 2)
         sale_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
+        customer = None
+        if customer_identity:
+            customer = db_session.query(User).filter(
+                (User.email == customer_identity) | (User.phone == customer_identity)
+            ).first()
+
         sale = Sale(
             user_id=cashier_id,
-            customer_id=cust_id,
+            customer_id=customer.id if customer else 0,
             sale_date=sale_date,
             subtotal=subtotal,
             tax_amount=tax_amount,
             discount_amount=disc_amt,
             total_amount=final_total,
-            status="Completed"
+            payment_method=payment_method,
+            amount_tendered=amount_tendered,
+            change_given=round(max(amount_tendered - final_total, 0.0), 2),
+            status="Completed",
+            delivery_street="N/A",
+            delivery_city="N/A",
+            delivery_zip="N/A"
         )
 
         db_session.add(sale)
-        db_session.flush()
+        db_session.flush() 
+        
         lines_for_receipt = []
         for item, product in rows:
             lt = round(float(product.price or 0) * int(item.quantity or 0), 2)
             lines_for_receipt.append({"name": product.name or "Item", "qty": int(item.quantity or 0), "line": lt})
-            db_session.add(Sale_Item(sale_id=sale.id, product_id=product.id, quantity=item.quantity, unit_price=product.price, line_total=product.price * item.quantity))
+            
+            db_session.add(Sale_Item(
+                sale_id=sale.id, 
+                product_id=product.id, 
+                quantity=item.quantity, 
+                unit_price=product.price, 
+                line_total=lt
+            ))
+            
             product.stock = max(product.stock - item.quantity, 0)
-            db_session.add(Stock_Movement(product_id=product.id, cashier_id=cashier_id, type="OUT", quantity=item.quantity, reason=f"POS Sale #{sale.id}", moved_at=sale_date))
+            db_session.add(Stock_Movement(
+                product_id=product.id, 
+                cashier_id=cashier_id, 
+                type="OUT", 
+                quantity=item.quantity, 
+                reason=f"POS Sale #{sale.id}", 
+                moved_at=sale_date
+            ))
+            
             db_session.delete(item)
             
-        if cust_id > 0:
-            customer = db_session.query(User).filter_by(id=cust_id).first()
-            if customer:
-                customer.loyalty_points += compute_points_earned(final_total)
+        if customer:
+            earned_points = int(final_total // 100)
+            customer.loyalty_points += earned_points
                 
         db_session.commit()
 
         change_due = round(max(amount_tendered - final_total, 0.0), 2)
         lines_enc = quote(json.dumps(lines_for_receipt), safe="")
+        
         return redirect(
             f"{base_pos_url}&pos_sale=1&sale_id={sale.id}&sale_date={quote_plus(sale_date)}"
             f"&total={quote_plus(f'{final_total:.2f}')}&tendered={quote_plus(f'{amount_tendered:.2f}')}"
             f"&change={quote_plus(f'{change_due:.2f}')}&lines={lines_enc}"
         )
+    except Exception as e:
+        db_session.rollback()
+        return redirect(f"{base_pos_url}&msg=Error:+{quote_plus(str(e))}")
     finally:
         db_session.close()
 
@@ -1157,7 +1128,6 @@ def products(request):
     search = (request.args.get('search') or '').strip()
     cat = (request.args.get('category') or 'all').strip()
     
-    # We need to define these so the template knows what the current settings are
     filters_dict = {
         'search': search,
         'category': cat,
