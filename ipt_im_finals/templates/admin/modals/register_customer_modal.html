@@ -12,9 +12,15 @@
       </div>
       <form method="post" action="{{ base_url }}/admin/customers/register?admin={{ is_admin }}&user_id={{ user_id }}&panel=customers-panel">
         <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label" for="customerRegisterName">Full Name <span class="text-danger">*</span></label>
-            <input id="customerRegisterName" type="text" name="name" class="form-control" placeholder="e.g. Maria Santos" required>
+          <div class="register-customer-grid-2 mb-3">
+            <div>
+              <label class="form-label" for="customerFirstName">First Name <span class="text-danger">*</span></label>
+              <input id="customerFirstName" type="text" name="first_name" class="form-control" placeholder="Maria" required>
+            </div>
+            <div>
+              <label class="form-label" for="customerLastName">Last Name <span class="text-danger">*</span></label>
+              <input id="customerLastName" type="text" name="last_name" class="form-control" placeholder="Santos" required>
+            </div>
           </div>
           <div class="register-customer-grid-2">
             <div>
@@ -22,7 +28,7 @@
               <input id="customerRegisterPhone" type="text" name="phone" class="form-control" placeholder="09xx-xxx-xxxx">
             </div>
             <div>
-              <label class="form-label" for="customerRegisterEmail">Email Address</label>
+              <label class="form-label" for="customerRegisterEmail">Email Address <span class="text-danger">*</span></label>
               <input id="customerRegisterEmail" type="email" name="email" class="form-control" placeholder="email@example.com" required>
             </div>
           </div>

@@ -1,28 +1,3 @@
 -- database: ./anik_shop.db
 
--- Recreate the sale table to ensure correct constraints and columns
-CREATE TABLE sale_new (
-    sale_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL REFERENCES user(user_id), -- The Cashier
-    customer_id INTEGER NOT NULL REFERENCES user(user_id), -- The Buyer (Defaults to 0)
-    discount_id INTEGER REFERENCES discount(discount_id),
-    total_amount REAL,
-    sale_date DATETIME,
-    subtotal FLOAT DEFAULT 0.0,
-    discount_amount FLOAT DEFAULT 0.0,
-    tax_amount FLOAT DEFAULT 0.0,
-    payment_method TEXT DEFAULT "Cash",
-    amount_tendered FLOAT DEFAULT 0.0,
-    change_given FLOAT DEFAULT 0.0,
-    status TEXT DEFAULT "Placed",
-    delivery_street TEXT DEFAULT "N/A",
-    delivery_city TEXT DEFAULT "N/A",
-    delivery_zip TEXT DEFAULT "N/A"
-);
-
--- Transfer all existing data
-INSERT INTO sale_new SELECT * FROM sale;
-
--- Swap the tables
-DROP TABLE sale;
-ALTER TABLE sale_new RENAME TO sale;
+ALTER TABLE pos_cart_item RENAME COLUMN cashier_id TO user_id;

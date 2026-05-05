@@ -22,15 +22,14 @@
   }
 
   .admin-app {
-    min-height: 100vh;
+    min-height: 100vh; 
     display: grid;
-    grid-template-columns: 230px minmax(0, 1fr);
-    grid-template-rows: auto auto 1fr;
+    grid-template-columns: 230px 1fr;
+    grid-template-rows: 60px auto 1fr; 
     grid-template-areas:
       "sidebar topbar"
       "sidebar stats"
       "sidebar body";
-    gap: 0;
     background: #f3f0fa;
   }
 
@@ -45,12 +44,14 @@
     flex-direction: column;
     overflow-y: auto;
     border-right: 1px solid rgba(255, 255, 255, 0.12);
+    z-index: 1000;
   }
 
-  .admin-brand {
-    padding: 0.85rem 0.95rem 0.75rem;
+.admin-brand {
+    padding: 0.95rem 0.95rem; 
+    text-align: center; 
     border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-  }
+}
 
   .admin-brand h2 {
     margin: 0;
@@ -330,9 +331,10 @@
 
   .admin-body {
     grid-area: body;
-    /* vertical breathing room for every admin page section; keep side gutter */
-    padding: 1.5rem 1.5rem;
-  }
+    overflow-y: auto !important; 
+    padding: 1rem 1.5rem 3rem;
+    background: #f3f0fa;
+}
 
   .admin-panel[hidden] {
     display: none !important;
@@ -409,11 +411,26 @@
     border-bottom: 1px solid var(--border);
   }
 
+.po-dropdown-pending { background-color: #fef3c7 !important; color: #92400e !important; }
+.po-dropdown-received { background-color: #dcfce7 !important; color: #166534 !important; }
+.po-dropdown-cancelled { background-color: #ffe4e6 !important; color: #be123c !important; }
+
+.po-select-custom {
+    font-size: 0.74rem !important;
+    width: 100px !important;
+    height: 22px !important;
+    padding: 0 0.46rem !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    line-height: 1.1 !important;
+    border: 0 !important;
+    appearance: none; 
+}
+
   .pos-layout {
     display: grid;
     grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr);
     gap: 0.75rem;
-    /* Same horizontal inset as stat cards + dashboard tables: .admin-body left/right + gap only */
     padding: 0;
     background: transparent;
     align-items: stretch;
@@ -488,8 +505,7 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.6rem;
-    height: 600px;
-    min-height: 560px;
+    height: auto;
     align-content: start;
     flex: 1 1 auto;
   }
@@ -552,8 +568,8 @@
     width: auto;
     height: auto;
     object-fit: contain;
-    transform: scale(1.08);
     transform-origin: center;
+    transform: none !important;
   }
 
   .pos-catalog-footer {
@@ -651,9 +667,8 @@
   }
 
   .pos-cart-items {
-    flex: 1 1 auto;
     min-height: 0;
-    overflow: auto;
+    overflow: visible;
     padding: 0 0.8rem;
     border-bottom: 1px solid var(--border);
   }
@@ -2763,13 +2778,14 @@
     min-width: 0;
   }
 
-  .dashboard-thumb {
-    width: 44px;
-    height: 44px;
+.dashboard-thumb {
+    width: 44px !important;
+    height: 44px !important;
     border-radius: 12px;
-    object-fit: cover;
+    object-fit: contain !important; /* Changed from cover */
     background: #f3f4f6;
     flex-shrink: 0;
+    transform: none !important; /* Explicitly disable any inherited zoom */
   }
 
   .dashboard-row-name {
@@ -2844,7 +2860,6 @@
     text-decoration: underline;
   }
 
-  /* Final override: keep card/panel visuals consistent across sections */
   .dashboard-card,
   .admin-main-panel,
   .pos-catalog,
@@ -2976,6 +2991,29 @@
     box-shadow: 0 0 0 0.2rem rgba(124, 90, 200, 0.12);
   }
 
+  .table-responsive,
+  .products-panel-shell,
+  .stock-panel-shell,
+  .purchase-panel-shell,
+  .sales-panel-shell,
+  .purchase-table-card,
+  .stock-table-card,
+  .sales-table-card,
+  .customers-table-shell {
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    overflow-x: auto !important; 
+  }
+
+  .admin-main-panel .table-responsive {
+    overflow-y: visible !important;
+  }
+
+  .table tbody tr {
+    height: 60px; 
+  }
+
 </style>
 
 <div class="admin-app">
@@ -2996,8 +3034,11 @@
       <div class="admin-nav-group">
         <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=products-panel" class="admin-nav-link js-admin-nav" data-target="products-panel"><span class="nav-glyph icon-products" aria-hidden="true"></span>Products</a>
         <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=stock-panel" class="admin-nav-link js-admin-nav" data-target="stock-panel"><span class="nav-glyph icon-stock" aria-hidden="true"></span>Stock Movements</a>
+        
+        {% if current_user_role == 'Admin' %}
         <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=purchase-panel" class="admin-nav-link js-admin-nav" data-target="purchase-panel"><span class="nav-glyph icon-purchase" aria-hidden="true"></span>Purchase Orders</a>
         <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=sales-panel" class="admin-nav-link js-admin-nav" data-target="sales-panel"><span class="nav-glyph icon-sales" aria-hidden="true"></span>Sales Orders</a>
+        {% endif %}
       </div>
 
       <p class="admin-nav-label">People</p>
@@ -3030,62 +3071,61 @@
   </div>
 
   <div class="row admin-stats" aria-label="Dashboard stats">
-    <div class="col-sm-6 col-xl-4">
-      <div class="dashboard-kpi-card">
-        <div class="dashboard-kpi-top">
-          <div class="dashboard-kpi-icon dashboard-kpi-icon--blue" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.607l-1.5 7A.5.5 0 0 1 13 11H4.14a.5.5 0 0 1-.49-.392L1.01 2.5H.5A.5.5 0 0 1 0 1.5z"/>
-              <path d="M4 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM9 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
-            </svg>
+      <div class="col-sm-6 col-xl-4">
+        <div class="dashboard-kpi-card">
+          <div class="dashboard-kpi-top">
+            <div class="dashboard-kpi-icon dashboard-kpi-icon--blue" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.607l-1.5 7A.5.5 0 0 1 13 11H4.14a.5.5 0 0 1-.49-.392L1.01 2.5H.5A.5.5 0 0 1 0 1.5z"/>
+                <path d="M4 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM9 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="dashboard-kpi-title">Sales Today</div>
+              <div class="dashboard-kpi-value">{{ stats.today_transactions or 0 }}</div>
+              <div class="dashboard-kpi-sub">Sales processed today</div>
+            </div>
           </div>
-          <div>
-            <div class="dashboard-kpi-title">Sales Today</div>
-            <div class="dashboard-kpi-value">{{ stats.today_transactions or 0 }}</div>
-            <div class="dashboard-kpi-sub">sales processed today</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-4">
+        <div class="dashboard-kpi-card">
+          <div class="dashboard-kpi-top">
+            <div class="dashboard-kpi-icon dashboard-kpi-icon--green" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M1 3a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v2H1V3z"/>
+                <path d="M0 7.5A.5.5 0 0 1 .5 7h15a.5.5 0 0 1 .5.5V13a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V7.5z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="dashboard-kpi-title">Revenue Today</div>
+              <div class="dashboard-kpi-value">₱{{ "%.2f"|format(stats.today_revenue or 0) }}</div>
+              <div class="dashboard-kpi-sub">Collected today</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-4">
+        <div class="dashboard-kpi-card">
+          <div class="dashboard-kpi-top">
+            <div class="dashboard-kpi-icon dashboard-kpi-icon--purple" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 1c-3 0-5 .7-5 2s2 2 5 2 5-.7 5-2-2-2-5-2z"/>
+                <path d="M3 5.5V8c0 1.3 2.2 2 5 2s5-.7 5-2V5.5c-1 .8-3 1.5-5 1.5s-4-.7-5-1.5z"/>
+                <path d="M3 9.5V12c0 1.3 2.2 2 5 2s5-.7 5-2V9.5c-1 .8-3 1.5-5 1.5s-4-.7-5-1.5z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="dashboard-kpi-title">Total Revenue</div>
+              <div class="dashboard-kpi-value">₱{{ "%.2f"|format(stats.all_time_revenue or 0) }}</div>
+              <div class="dashboard-kpi-sub">Total since launch</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="col-sm-6 col-xl-4">
-      <div class="dashboard-kpi-card">
-        <div class="dashboard-kpi-top">
-          <div class="dashboard-kpi-icon dashboard-kpi-icon--green" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M1 3a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v2H1V3z"/>
-              <path d="M0 7.5A.5.5 0 0 1 .5 7h15a.5.5 0 0 1 .5.5V13a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V7.5z"/>
-            </svg>
-          </div>
-          <div>
-            <div class="dashboard-kpi-title">Revenue Today</div>
-            <div class="dashboard-kpi-value">₱{{ "%.2f"|format(stats.today_revenue or 0) }}</div>
-            <div class="dashboard-kpi-sub">collected today</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-4">
-      <div class="dashboard-kpi-card">
-        <div class="dashboard-kpi-top">
-          <div class="dashboard-kpi-icon dashboard-kpi-icon--purple" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 1c-3 0-5 .7-5 2s2 2 5 2 5-.7 5-2-2-2-5-2z"/>
-              <path d="M3 5.5V8c0 1.3 2.2 2 5 2s5-.7 5-2V5.5c-1 .8-3 1.5-5 1.5s-4-.7-5-1.5z"/>
-              <path d="M3 9.5V12c0 1.3 2.2 2 5 2s5-.7 5-2V9.5c-1 .8-3 1.5-5 1.5s-4-.7-5-1.5z"/>
-            </svg>
-          </div>
-          <div>
-            <div class="dashboard-kpi-title">Total Revenue</div>
-            <div class="dashboard-kpi-value">₱{{ "%.2f"|format(stats.all_time_revenue or 0) }}</div>
-            <div class="dashboard-kpi-sub">total since launch</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="admin-body">
-    <section id="dashboard-panel" class="admin-panel">
+<section id="dashboard-panel" class="admin-panel">
       <div class="row dashboard-grid">
         <div class="col-lg-6">
           <div class="dashboard-summary-card">
@@ -3098,10 +3138,7 @@
                 </svg>
                 Low Stock Items
               </div>
-              <a
-                class="dashboard-view-all"
-                href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=stock-panel"
-              >View all</a>
+              <a class="dashboard-view-all" href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=low-stock-panel">View all</a>
             </div>
 
             <div class="dashboard-summary-list">
@@ -3109,11 +3146,7 @@
                 {% for p in low_stock_products[:5] %}
                   <div class="dashboard-list-row">
                     <div class="dashboard-row-left">
-                      <img
-                        class="dashboard-thumb"
-                        src="{{ base_url }}/static/img/products/{{ p.image or 'placeholder.png' }}"
-                        alt="{{ p.name }}"
-                      >
+                      <img class="dashboard-thumb" src="{{ base_url }}/static/img/products/{{ p.image or 'placeholder.png' }}" alt="{{ p.name }}">
                       <div class="dashboard-row-name">{{ p.name }}</div>
                     </div>
                     <div class="dashboard-left-badge">{{ p.stock or 0 }} left</div>
@@ -3127,7 +3160,7 @@
             </div>
 
             <div class="dashboard-summary-footer">
-              <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=stock-panel">View all low stock items</a>
+              <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=low-stock-panel">View all low stock items</a>
             </div>
           </div>
         </div>
@@ -3144,10 +3177,7 @@
                 </svg>
                 Top Products
               </div>
-              <a
-                class="dashboard-view-all"
-                href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=top-products-panel"
-              >View all</a>
+              <a class="dashboard-view-all" href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=top-products-panel">View all</a>
             </div>
 
             <div class="dashboard-summary-list">
@@ -3156,11 +3186,11 @@
                   <div class="dashboard-list-row">
                     <div class="dashboard-row-left">
                       {% if loop.index == 1 %}
-                        <span class="dashboard-rank-pill dashboard-rank-pill--gold" aria-label="1st" title="1st">1</span>
+                        <span class="dashboard-rank-pill dashboard-rank-pill--gold">1</span>
                       {% elif loop.index == 2 %}
-                        <span class="dashboard-rank-pill dashboard-rank-pill--silver" aria-label="2nd" title="2nd">2</span>
+                        <span class="dashboard-rank-pill dashboard-rank-pill--silver">2</span>
                       {% elif loop.index == 3 %}
-                        <span class="dashboard-rank-pill dashboard-rank-pill--bronze" aria-label="3rd" title="3rd">3</span>
+                        <span class="dashboard-rank-pill dashboard-rank-pill--bronze">3</span>
                       {% else %}
                         <span class="dashboard-rank-pill">{{ loop.index }}</span>
                       {% endif %}
@@ -3175,16 +3205,12 @@
                 </div>
               {% endif %}
             </div>
-
-            <div class="dashboard-summary-footer">
-              <a href="{{ base_url }}/admin_dashboard?admin={{ is_admin }}&user_id={{ user_id }}&panel=top-products-panel">View all top products</a>
-            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="pos-panel" class="admin-panel" hidden>
+<section id="pos-panel" class="admin-panel" hidden>
       <div class="pos-layout">
         <div class="pos-catalog">
           <div class="pos-catalog-head">
@@ -3213,7 +3239,9 @@
                 <span class="pos-product-name">{{ p.name }}</span>
                 <span class="pos-product-price">₱{{ "%.2f"|format(p.price or 0) }}</span>
                 {% if (p.stock or 0) > 0 %}
-                <span class="pos-product-stock">{{ p.stock or 0 }} piece left</span>
+                <span class="pos-product-stock fw-bold {% if p.stock <= 5 %}text-danger{% else %}text-success{% endif %}">
+                  {{ p.stock }} pcs left
+                </span>
                 {% else %}
                 <span class="pos-product-stock text-danger">Out of stock</span>
                 {% endif %}
@@ -3282,20 +3310,22 @@
 
           <div class="pos-summary">
             <div class="pos-summary-row">
-              <span>Subtotal (Net)</span>
-              <span>₱{{ "%.2f"|format(pos_net_subtotal or 0) }}</span>
+                <span>Subtotal (Net)</span>
+                <span id="posStickerSubtotal">₱{{ "%.2f"|format(pos_subtotal or 0) }}</span>
             </div>
             <div class="pos-summary-row">
-              <span>Discount</span>
-              <span class="text-danger">-₱{{ "%.2f"|format(pos_discount or 0) }}</span>
+                <span>Discount</span>
+                <span class="text-danger" id="posDiscountVal">-₱0.00</span>
             </div>
             <div class="pos-summary-row">
-              <span>VAT (12% Incl.)</span><span>₱{{ "%.2f"|format(pos_tax or 0) }}</span>
+                <span>VAT (12% Incl.)</span>
+                <span id="posTaxVal">₱{{ "%.2f"|format(pos_tax or 0) }}</span>
             </div>
             <div class="pos-summary-total">
-             <span>TOTAL</span>
-            <span>₱{{ "%.2f"|format(pos_total or 0) }}</span>
-          </div>
+                <span>TOTAL</span>
+                <span id="posTotalVal">₱{{ "%.2f"|format(pos_total or 0) }}</span>
+            </div>
+        </div>
 
           <form method="post" action="{{ base_url }}/admin/pos/process?admin={{ is_admin }}&user_id={{ user_id }}" class="pos-checkout px-3">
               <div class="pos-grid-2">
@@ -3308,7 +3338,7 @@
                       </datalist>
                   </div>
                   <div class="search-container">
-                      <label class="fw-bold small mb-1">CUSTOMER SEARCH (OPT.)</label>
+                      <label class="fw-bold small mb-1">CUSTOMER EMAIL/NO. (OPT.)</label>
                       <input type="text" id="customerSearchInput" name="customer_identity" list="customerSuggestions" 
                             class="form-control form-control-sm" placeholder="Email/Phone...">
                       <datalist id="customerSuggestions">
@@ -3416,10 +3446,10 @@
             <tr data-product-name="{{ (p.name or '')|lower }}" data-product-sku="{{ ((p.category or 'PRD')[:3] ~ '-' ~ '%03d'|format(p.id))|lower }}" data-product-category="{{ (p.category or '')|lower }}">
               <td class="products-id">#{{ p.id }}</td>
               <td>
-                <div class="products-name">{{ p.name }}</div>
-                <div class="products-code">8888{{ "%04d"|format(p.id) }}</div>
+                  <div class="products-name">{{ p.name }}</div>
+                  <div class="products-code">{{ p.barcode or 'N/A' }}</div> 
               </td>
-              <td><span class="products-sku">{{ (p.category or "PRD")[:3]|upper }}-{{ "%03d"|format(p.id) }}</span></td>
+              <td><span class="products-sku">{{ p.sku or 'N/A' }}</span></td> 
               <td>
                 <div class="products-category">
                   <svg class="products-cat-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -3434,16 +3464,19 @@
                 {% if (p.stock or 0) <= 0 %}
                 <span class="stock-pill out">Out of Stock</span>
                 {% elif (p.stock or 0) <= 5 %}
-                <span class="stock-pill low">{{ p.stock or 0 }} piece</span>
+                <span class="stock-pill low">{{ p.stock or 0 }} pcs</span>
                 {% else %}
-                <span class="stock-pill ok">{{ p.stock or 0 }} pad</span>
+                <span class="stock-pill ok">{{ p.stock or 0 }} pcs</span>
                 {% endif %}
               </td>
               <td>
-                <span class="status-pill status-pill--active">
-                  <span class="status-dot" aria-hidden="true"></span>
-                  Active
-                </span>
+                <select class="form-select form-select-sm fw-bold po-select-custom 
+                  {% if p.status == 'active' %}po-dropdown-received{% else %}po-dropdown-cancelled{% endif %}"
+                  style="width: 90px;"
+                  onchange="this.classList.remove('po-dropdown-received', 'po-dropdown-cancelled'); this.classList.add(this.value === 'active' ? 'po-dropdown-received' : 'po-dropdown-cancelled');">
+                  <option value="active" {% if p.status == 'active' %}selected{% endif %}>Active</option>
+                  <option value="inactive" {% if p.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
               </td>
               <td class="text-center text-nowrap">
                 <button
@@ -3651,52 +3684,23 @@
                         </div>
                       </td>
                       <td class="purchase-th-left">
-                        <div class="d-flex align-items-center gap-3">
-                          <span aria-hidden="true" style="width:28px;height:28px;border-radius:10px;background:rgba(124,90,200,.10);display:inline-flex;align-items:center;justify-content:center;color:#6a4caf;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M3 21h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                              <path d="M5 21V8l7-5 7 5v13" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                              <path d="M9 21v-7h6v7" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                            </svg>
-                          </span>
-                          <span class="text-muted">{{ row.supplier_id }}</span>
-                        </div>
+                        <span class="text-muted">{{ row.supplier_id }}</span>
                       </td>
                       <td class="purchase-th-left">
-                        <div class="d-flex align-items-center gap-3">
-                          <span aria-hidden="true" style="width:28px;height:28px;border-radius:10px;background:rgba(124,90,200,.10);display:inline-flex;align-items:center;justify-content:center;color:#6a4caf;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M8 2v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                              <path d="M16 2v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                              <path d="M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                              <path d="M5 6h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                            </svg>
-                          </span>
-                          <span class="text-muted">{{ row.po.created_at or row.po.order_date or row.po.date_created or "—" }}</span>
-                        </div>
+                        <span class="text-muted">{{ row.po.created_at or row.po.order_date or "—" }}</span>
                       </td>
                       <td class="purchase-th-left">
-                        <span class="po-status-pill
-                          {% if po_status == 'received' %}po-status-received{% elif po_status == 'cancelled' %}po-status-cancelled{% else %}po-status-pending{% endif %}">
-                          <span class="po-status-icon" aria-hidden="true">
-                            {% if po_status == 'cancelled' %}
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                              </svg>
-                            {% elif po_status == 'received' %}
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                              </svg>
-                            {% else %}
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2"/>
-                              </svg>
-                            {% endif %}
-                          </span>
-                          {{ po_status|capitalize }}
-                        </span>
+                        <form action="{{ base_url }}/admin/purchase-orders/{{ row.po.id }}/update_status" method="POST" class="d-inline">
+                          <select name="status" onchange="this.form.submit()" 
+                            class="form-select form-select-sm fw-bold po-select-custom 
+                            {% if po_status == 'received' %}po-dropdown-received
+                            {% elif po_status == 'cancelled' %}po-dropdown-cancelled
+                            {% else %}po-dropdown-pending{% endif %}">
+                            <option value="pending" {% if po_status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="received" {% if po_status == 'received' %}selected{% endif %}>Received</option>
+                            <option value="cancelled" {% if po_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                          </select>
+                        </form>
                       </td>
                       <td class="purchase-td-end fw-semibold">₱{{ "%.2f"|format(row.po.total_cost or 0) }}</td>
                       <td class="purchase-td-end">{{ row.item_count }} item(s)</td>
@@ -3741,7 +3745,8 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Full Name</th>
+              <th>First Name</th>
+              <th>Last Name</th>
               <th>Phone</th>
               <th>Email</th>
               <th class="text-end">Points</th>
@@ -3752,7 +3757,8 @@
               {% for c in customers %}
               <tr data-customer-text="{{ (c.name ~ ' ' ~ (c.phone or '') ~ ' ' ~ (c.email or ''))|lower }}">
                 <td class="text-muted">{{ c.id }}</td>
-                <td class="fw-semibold">{{ c.name }}</td>
+                <td class="fw-semibold">{{ c.first_name }}</td>
+                <td class="fw-semibold">{{ c.last_name }}</td>
                 <td>{{ c.phone or "—" }}</td>
                 <td class="text-muted">{{ c.email or "—" }}</td>
                 <td class="text-end"><span class="loyalty-points-pill">★ {{ c.loyalty_points or 0 }} pts</span></td>
@@ -3768,9 +3774,9 @@
       <div class="customers-charts-grid">
         <div class="customers-chart-card segment-card">
           <div class="customers-chart-head segments-head">
-            <p class="customers-chart-title">Customer Segments</p>
+            <p class="customers-chart-title">Customer Loyalty Points</p>
           </div>
-          <p class="customers-chart-value" id="customerSegmentsValue">0 customers</p>
+          <p class="customers-chart-value" id="customerSegmentsValue">0 all-time customers</p>
           <canvas id="customerTotalChart" class="customers-chart-canvas" aria-label="Total customers chart"></canvas>
         </div>
         <div class="customers-chart-card leaderboard-card">
@@ -3909,11 +3915,126 @@
       </div>
     </section>
 
+<section id="low-stock-panel" class="admin-main-panel admin-panel" hidden>
+      <div class="admin-main-panel__head">
+        <h2 class="admin-main-panel__title">All Low Stock Items</h2>
+        <p class="admin-main-panel__meta">The following items have 5 or fewer pieces remaining.</p>
+      </div>
+      <div class="table-responsive">
+        <table class="table products-table align-middle">
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>SKU</th>
+              <th>Category</th>
+              <th class="text-end">Price</th>
+              <th>Stock</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if low_stock_products and low_stock_products|length > 0 %}
+              {% for p in low_stock_products %}
+              <tr>
+                <td>
+                  <div class="products-name">{{ p.name }}</div>
+                  <div class="products-code">{{ p.barcode or 'N/A' }}</div>
+                </td>
+                <td><span class="products-sku">{{ p.sku or 'N/A' }}</span></td>
+                <td>
+                  <div class="products-category">
+                    <svg class="products-cat-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M3 7.5c0-1.38 1.12-2.5 2.5-2.5h9c.66 0 1.3.26 1.77.73l2.5 2.5c.47.47.73 1.11.73 1.77v8.5c0 1.38-1.12 2.5-2.5 2.5H5.5C4.12 22 3 20.88 3 19.5v-12Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                      <path d="M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span class="products-category-text">{{ p.category or "—" }}</span>
+                  </div>
+                </td>
+                <td class="text-end">₱{{ "%.2f"|format(p.price or 0) }}</td>
+                <td>
+                  <span class="stock-pill out" style="color: #be123c !important; background: #ffe4e6 !important;">
+                    {{ p.stock or 0 }} pcs left
+                  </span>
+                </td>
+                <td class="text-center">
+                  <button type="button" class="products-action-btn products-edit-btn js-edit-product" 
+                          data-bs-toggle="modal" data-bs-target="#editProductModal"
+                          data-id="{{ p.id }}" 
+                          data-name="{{ p.name|e }}" 
+                          data-brand="{{ p.brand|e }}"
+                          data-category="{{ p.category|e }}" 
+                          data-image="{{ p.image|e }}"
+                          data-price="{{ p.cost_price or 0 }}" 
+                          data-stock="{{ p.stock or 0 }}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+            <tr><td colspan="6" class="text-center text-muted py-5">No low stock items detected.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
   </div>
 </div>
 
 {% include "admin/modals/register_customer_modal.html" %}
 {% include "admin/modals/customer_detail_modal.html" %}
+
+<div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title h5 mb-0" id="editProductModalLabel">↺ Restock Product</h3>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{{ base_url }}/admin/purchase-orders/create?admin={{ is_admin }}&user_id={{ user_id }}&panel=purchase-panel" method="POST" id="quickRestockForm">
+        <div class="modal-body">
+          <input type="hidden" name="admin" value="{{ 'True' if is_admin else 'False' }}">
+          <input type="hidden" name="user_id" value="{{ user_id }}">
+          <input type="hidden" name="supplier_id" value="1">
+          <input type="hidden" id="restock_pid" name="po_item_product_id[]" value="">
+          <input type="hidden" id="restock_unit" name="po_item_unit_cost[]" value="">
+          
+          <div class="mb-2">
+            <label class="form-label">Product Name</label>
+            <input id="editProductName" type="text" class="form-control" readonly>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Brand</label>
+            <input id="editProductBrand" type="text" class="form-control" readonly>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Category</label>
+            <input id="editProductCategory" type="text" class="form-control" readonly>
+          </div>
+          <div class="row g-2">
+            <div class="col-12">
+              <label class="form-label">Total Cost Price (₱)</label>
+              <input id="editProductPrice" type="number" step="0.01" class="form-control" readonly>
+            </div>
+          </div>
+          <div class="mt-3">
+            <label class="form-label fw-semibold">Quantity to Add</label>
+            <input type="number" id="quickRestockQty" name="po_item_qty[]" class="form-control" placeholder="e.g. 50" min="1" required>
+            <div class="form-text">Enter the amount of new stock arriving.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-main" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-main">Confirm Restock</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 <div class="modal fade purchase-modal" id="purchaseOrderModal" tabindex="-1" aria-labelledby="purchaseOrderModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -3935,8 +4056,8 @@
               </select>
             </div>
             <div>
-              <label class="form-label fw-semibold">Cashier ID</label>
-              <input type="text" class="form-control" value="{{ po_cashier_id or '' }}" readonly>
+              <label class="form-label fw-semibold">User ID</label>
+              <input type="text" class="form-control" value="{{ user_id }}" readonly>
             </div>
           </div>
 
@@ -3954,11 +4075,11 @@
                 <select name="po_item_product_id[]" class="form-select po-item-product" required>
                   <option value="">Select product</option>
                   {% for p in all_products %}
-                  <option value="{{ p.id }}" data-price="{{ p.price or 0 }}">{{ p.name }}</option>
+                  <option value="{{ p.id }}" data-price="{{ p.cost_price or 0 }}">{{ p.name }}</option>
                   {% endfor %}
                 </select>
               </div>
-              <div><input type="number" name="po_item_qty[]" class="form-control po-item-qty" min="1" step="1" value="1" required></div>
+              <div><input type="number" name="po_item_qty[]" class="form-control po-item-qty" min="1" value="1" required></div>
               <div><input type="number" name="po_item_unit_cost[]" class="form-control po-item-unit" min="0" step="0.01" value="0.00" required></div>
               <div><input type="text" class="form-control po-item-line" value="0.00" readonly></div>
               <div><button type="button" class="po-remove-item" aria-label="Remove item">x</button></div>
@@ -3997,11 +4118,11 @@
           <div class="product-form-grid-2 mb-3">
             <div>
               <label class="form-label">Product Name <span class="required-mark">*</span></label>
-              <input type="text" name="name" class="form-control" placeholder="e.g. Yellow Pad Paper" required>
+              <input type="text" name="name" class="form-control" placeholder="e.g. Kirby Heart Keychain" required>
             </div>
             <div>
               <label class="form-label">SKU <span class="required-mark">*</span></label>
-              <input type="text" class="form-control" placeholder="e.g. YPP-001">
+              <input type="text" class="form-control" placeholder="e.g. KEY-NIN-012">
             </div>
           </div>
 
@@ -4060,7 +4181,10 @@
 
           <div class="mb-3">
             <label class="form-label">Brand Name</label>
-            <input type="text" name="brand" class="form-control" placeholder="e.g. Bandai">
+            <input type="text" name="brand" list="brandOptions" class="form-control" placeholder="e.g. Bandai">
+            <datalist id="brandOptions">
+              {% for p in all_products %}{% if p.brand %}<option value="{{ p.brand }}">{% endif %}{% endfor %}
+            </datalist>
           </div>
 
           <div class="mb-2">
@@ -4084,43 +4208,55 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 class="modal-title h5 mb-0" id="editProductModalLabel">↺ Adjust Stock</h3>
+        <h3 class="modal-title h5 mb-0" id="editProductModalLabel">↺ Restock Product</h3>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form id="editProductForm" method="POST">
         <div class="modal-body">
           <input type="hidden" name="admin" value="{{ 'True' if is_admin else 'False' }}">
           <input type="hidden" name="user_id" value="{{ user_id }}">
-          <div class="mb-2"><label class="form-label">Product Name</label><input id="editProductName" type="text" name="name" class="form-control" required></div>
-          <div class="mb-2"><label class="form-label">Brand</label><input id="editProductBrand" type="text" name="brand" class="form-control" required></div>
+          <input type="hidden" name="movement_type" value="Restock">
+          
+          <div class="mb-2">
+            <label class="form-label">Product Name</label>
+            <input id="editProductName" type="text" name="name" class="form-control" readonly>
+          </div>
+          
+          <div class="mb-2">
+            <label class="form-label">Brand</label>
+            <input id="editProductBrand" type="text" name="brand" class="form-control" readonly>
+          </div>
+          
           <div class="mb-2">
             <label class="form-label">Category</label>
             <select id="editProductCategory" name="category" class="form-select" required>
-              <option value="Keychains">Keychains</option>
-              <option value="Figurines">Figurines</option>
-              <option value="Plushies">Plushies</option>
+              {% for cat in product_categories %}
+              <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
             </select>
           </div>
-          <div class="mb-2"><label class="form-label">Image Filename</label><input id="editProductImage" type="text" name="image" class="form-control" required></div>
+          
+          <div class="mb-2">
+            <label class="form-label">Image Filename</label>
+            <input id="editProductImage" type="text" name="image" class="form-control" required>
+          </div>
+          
           <div class="row g-2">
-            <div class="col-12"><label class="form-label">Price</label><input id="editProductPrice" type="number" step="0.01" name="price" class="form-control" required></div>
+            <div class="col-12">
+              <label class="form-label">Total Cost Price (₱)</label>
+              <input id="editProductPrice" type="number" step="0.01" name="price" class="form-control" readonly>
+            </div>
           </div>
+          
           <div class="mt-3">
-            <label class="form-label fw-semibold">Quantity Change</label>
-            <input type="number" name="quantity_change" class="form-control" placeholder="e.g. 50 (restock) or -5 (deduct)">
-            <div class="form-text">Use positive number for restock, negative for deduction.</div>
-          </div>
-          <div class="mt-3">
-            <label class="form-label fw-semibold">Movement Type</label>
-            <select name="movement_type" class="form-select">
-              <option value="Restock">Restock</option>
-              <option value="Deduct">Deduct</option>
-            </select>
+            <label class="form-label fw-semibold">Quantity to Add</label>
+            <input type="number" name="quantity_change" class="form-control" placeholder="e.g. 50" min="1" required>
+            <div class="form-text">Enter the amount of new stock arriving.</div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-main" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-main">Save Changes</button>
+          <button type="submit" class="btn btn-main">Confirm Restock</button>
         </div>
       </form>
     </div>
@@ -4130,6 +4266,7 @@
 <script id="customerGraphData" type="application/json">{{ customer_graph_data|safe }}</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+
   (function () {
     const clock = document.getElementById("live-clock");
     if (!clock) return;
@@ -4156,7 +4293,8 @@
       "purchase-panel": { text: "Purchase Orders", icon: "icon-purchase" },
       "sales-panel": { text: "Sales Orders", icon: "icon-sales" },
       "customers-panel": { text: "Customers", icon: "icon-customers" },
-      "top-products-panel": { text: "Top Products", icon: "icon-products" }
+      "top-products-panel": { text: "Top Products", icon: "icon-products" },
+      "low-stock-panel": { text: "Low Stock Inventory", icon: "icon-products" }
     };
 
     function setActivePanel(targetId) {
@@ -4300,7 +4438,6 @@ function getFilteredCards() {
     });
 }
 
-    // Listen for typing in the new barcode box
     barcodeFilter.addEventListener("input", () => {
         currentPage = 1;
         renderPosPage();
@@ -4767,7 +4904,6 @@ function getFilteredCards() {
       });
     }
 
-    // kpiChartEl intentionally removed after replacing "Customer KPI Mix" chart with leaderboard list
   })();
 
   (function () {
@@ -4915,28 +5051,94 @@ function getFilteredCards() {
     updateTotals();
   })();
 
-  (function () {
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('po-item-product')) {
+        const selectedOption = e.target.options[e.target.selectedIndex];
+        const cost = selectedOption.getAttribute('data-price') || "0.00";
+        const row = e.target.closest('.po-item-row');
+        const unitInput = row.querySelector('.po-item-unit');
+        if (unitInput) {
+            unitInput.value = parseFloat(cost).toFixed(2);
+            unitInput.dispatchEvent(new Event('input'));
+        }
+    }
+  });
+
+(function () {
     const modal = document.getElementById("editProductModal");
-    const form = document.getElementById("editProductForm");
+    const form = document.getElementById("quickRestockForm");
     if (!modal || !form) return;
+
     const fields = {
       name: document.getElementById("editProductName"),
       brand: document.getElementById("editProductBrand"),
       category: document.getElementById("editProductCategory"),
-      image: document.getElementById("editProductImage"),
-      price: document.getElementById("editProductPrice")
+      price: document.getElementById("editProductPrice"),
+      qtyInput: document.getElementById("quickRestockQty"),
+      hiddenPid: document.getElementById("restock_pid"),
+      hiddenUnit: document.getElementById("restock_unit")
     };
+
+    let unitCost = 0;
+
+    function calculateTotal() {
+      const q = parseFloat(fields.qtyInput.value) || 0;
+      fields.price.value = (q * unitCost).toFixed(2);
+    }
+
     modal.addEventListener("show.bs.modal", function (event) {
       const trigger = event.relatedTarget;
       if (!trigger) return;
+
       const id = trigger.getAttribute("data-id");
-      form.action = "{{ base_url }}/edit/" + id + "?admin={{ is_admin }}&user_id={{ user_id }}&panel=products-panel";
+      unitCost = parseFloat(trigger.getAttribute("data-price")) || 0;
+
       fields.name.value = trigger.getAttribute("data-name") || "";
       fields.brand.value = trigger.getAttribute("data-brand") || "";
       fields.category.value = trigger.getAttribute("data-category") || "";
-      fields.image.value = trigger.getAttribute("data-image") || "";
-      fields.price.value = trigger.getAttribute("data-price") || "0";
+      
+      fields.hiddenPid.value = id;
+      fields.hiddenUnit.value = unitCost;
+
+      fields.qtyInput.value = 1;
+      calculateTotal();
     });
+
+    fields.qtyInput.addEventListener("input", calculateTotal);
+  })();
+
+  // Auto-calculate Discount Display on Load
+  (function () {
+    const cartItems = document.querySelectorAll('.pos-cart-item');
+    let totalQty = 0;
+    let rawSubtotal = 0;
+
+    cartItems.forEach(item => {
+      const qty = parseInt(item.querySelector('.pos-qty-value').textContent) || 0;
+      const priceText = item.querySelector('.pos-cart-item-price').textContent;
+      const price = parseFloat(priceText.replace('₱', '').trim()) || 0;
+      totalQty += qty;
+      rawSubtotal += (price * qty);
+    });
+
+    let discount = 0;
+    if (totalQty >= 5) discount = 100.0;
+    else if (totalQty >= 3) discount = 75.0;
+    else if (totalQty > 0) discount = 50.0;
+
+    const finalTotal = Math.max(rawSubtotal - discount, 0);
+    const tax = finalTotal - (finalTotal / 1.12);
+    const netSubtotal = finalTotal - tax;
+
+    const discEl = document.getElementById('posDiscountVal');
+    const totalEl = document.getElementById('posTotalVal');
+    const taxEl = document.getElementById('posTaxVal');
+    const subEl = document.getElementById('posStickerSubtotal');
+
+    if (discEl) discEl.textContent = `-₱${discount.toFixed(2)}`;
+    if (totalEl) totalEl.textContent = `₱${finalTotal.toFixed(2)}`;
+    if (taxEl) taxEl.textContent = `₱${tax.toFixed(2)}`;
+    if (subEl) subEl.textContent = `₱${netSubtotal.toFixed(2)}`;
   })();
 </script>
 {% endblock %}

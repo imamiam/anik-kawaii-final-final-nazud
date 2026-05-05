@@ -50,7 +50,7 @@ class Cart_Item(Base):
 class Pos_Cart_Item(Base):
     __tablename__ = 'pos_cart_item'
     id = Column(Integer, primary_key=True)
-    cashier_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, nullable=False)
     product_id = Column(Integer, nullable=False)
     quantity = Column(Integer, default=1)
 
@@ -86,7 +86,7 @@ class Stock_Movement(Base):
     __tablename__ = 'stock_movement'
     id = Column("movement_id", Integer, primary_key=True)
     product_id = Column(Integer, nullable=False)
-    cashier_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, nullable=False)
     type = Column(String(20), default="")
     quantity = Column(Integer, default=0)
     reason = Column(String, default="")
@@ -119,17 +119,6 @@ class Supplier(Base):
     street = Column(String)
     city = Column(String)
     zip_code = Column(String)
-
-class Admin(Base):
-    __tablename__ = 'admin'
-    id = Column("admin_id", Integer, primary_key=True)
-    first_name = Column(String(50)) 
-    last_name = Column(String(50))  
-    username = Column(String(50), unique=True)
-    password_hash = Column(String(120))
-    email = Column(String(100), unique=True)
-    role = Column(String(30), default="admin")
-    status = Column(String(20), default="active")
 
 class Discount(Base):
     __tablename__ = 'discount'
@@ -193,7 +182,7 @@ def admin_cancel_sale(request, sale_id):
                 
                 db_session.add(Stock_Movement(
                     product_id=product.id,
-                    cashier_id=user_id,
+                    user_id=user_id,
                     type="IN",
                     quantity=item.quantity,
                     reason=f"Restored from Cancelled Sale #{sale.id}",
@@ -476,7 +465,9 @@ url_map = Map([
     Rule("/admin/pos/process", endpoint="admin_pos_process_sale", methods=["POST"]),
     Rule("/admin/purchase-orders/create", endpoint="admin_create_purchase_order", methods=["POST"]),
     Rule("/admin/purchase-orders/<int:po_id>/receive", endpoint="admin_receive_purchase_order", methods=["POST"]),
+    Rule("/admin/products/<int:product_id>/update_status", endpoint="update_product_status", methods=["POST"]),
     Rule("/admin/customers/register", endpoint="admin_register_customer", methods=["POST"]),
+    Rule("/admin/purchase-orders/<int:po_id>/update_status", endpoint="update_po_status", methods=["POST"]),
     Rule("/admin_customers", endpoint="admin_customers"),
     Rule("/register", endpoint="register", methods=["GET", "POST"]),
     Rule("/login", endpoint="login", methods=["GET", "POST"]),
@@ -612,13 +603,19 @@ def admin_dashboard(request):
         products = product_query.order_by(Product.id.desc()).all()
         
         product_categories = sorted({(p.category or "").strip() for p in all_products if (p.category or "").strip()}, key=lambda s: s.lower())
-        low_stock_products = [p for p in all_products if (p.stock or 0) >= 0 and (p.stock or 0) <= 5]
+        low_stock_products = sorted(
+            [p for p in all_products if (p.stock or 0) >= 0 and (p.stock or 0) <= 5],
+            key=lambda x: x.stock
+        )
         
         today_prefix = datetime.now().strftime("%Y-%m-%d")
-        today_sales = dbp.query(Sale).filter(Sale.sale_date.like(f"{today_prefix}%")).all()
+        today_sales = dbp.query(Sale).filter(
+            Sale.sale_date.like(f"{today_prefix}%"),
+            Sale.status != "Cancelled"
+        ).all()
         today_transactions = len(today_sales)
         today_revenue = sum([(s.total_amount or 0.0) for s in today_sales])
-        all_time_revenue = sum([(s.total_amount or 0.0) for s in dbp.query(Sale).all()])
+        all_time_revenue = sum([(s.total_amount or 0.0) for s in dbp.query(Sale).filter(Sale.status != "Cancelled").all()])
 
         sale_rows = dbp.query(Sale).order_by(Sale.id.desc()).limit(15).all()
         for sale in sale_rows:
@@ -627,9 +624,13 @@ def admin_dashboard(request):
         movements_list = dbp.query(Stock_Movement).order_by(Stock_Movement.id.desc()).all()
         for m in movements_list:
             p_obj = dbp.query(Product).filter_by(id=m.product_id).first()
+            cashier = dbp.query(User).filter_by(id=m.user_id).first()
+            cashier_name = f"{cashier.first_name}" if cashier else f"ID: {m.user_id}"
+            
             stock_movements.append({
                 "movement": m, 
-                "product_name": p_obj.name if p_obj else "Unknown Product"
+                "product_name": p_obj.name if p_obj else "Unknown Product",
+                "cashier_display": cashier_name
             })
 
         po_list = dbp.query(Purchase_Order).order_by(Purchase_Order.id.desc()).all()
@@ -644,14 +645,14 @@ def admin_dashboard(request):
         suppliers = dbp.query(Supplier).all()
 
         top_products = dbp.query(
-            Sale_Item.product_id,
+            Product.id.label('product_id'),
             Product.name.label('product_name'),
-            func.sum(Sale_Item.quantity).label('units_sold')
-        ).join(Product, Sale_Item.product_id == Product.id).group_by(Sale_Item.product_id).order_by(func.sum(Sale_Item.quantity).desc()).limit(10).all()
+            (15 - Product.stock).label('units_sold')
+        ).filter(Product.stock < 15).order_by((15 - Product.stock).desc()).limit(10).all()
 
         pos_cashier_id = resolve_staff_cashier_id(dbp, user_id)
         po_cashier_id = pos_cashier_id
-        pos_rows = dbp.query(Pos_Cart_Item, Product).join(Product, Pos_Cart_Item.product_id == Product.id).filter(Pos_Cart_Item.cashier_id == pos_cashier_id).all() if pos_cashier_id else []
+        pos_rows = dbp.query(Pos_Cart_Item, Product).join(Product, Pos_Cart_Item.product_id == Product.id).filter(Pos_Cart_Item.user_id == pos_cashier_id).all() if pos_cashier_id else []
         for pos_item, product in pos_rows:
             line = (product.price or 0.0) * (pos_item.quantity or 0)
             pos_subtotal += line
@@ -679,10 +680,12 @@ def admin_dashboard(request):
                 "total_points": sum(int(c.loyalty_points or 0) for c in all_customers)
             },
             "distribution": {
-                "labels": ["0-50", "51+"], 
+                "labels": ["1-5 pts", "6-10 pts", "11-15 pts", "15+ pts"], 
                 "values": [
-                    len([c for c in all_customers if int(c.loyalty_points or 0) <= 50]),
-                    len([c for c in all_customers if int(c.loyalty_points or 0) > 50])
+                    len([c for c in all_customers if 1 <= int(c.loyalty_points or 0) <= 5]),
+                    len([c for c in all_customers if 5 < int(c.loyalty_points or 0) <= 10]),
+                    len([c for c in all_customers if 10 < int(c.loyalty_points or 0) <= 15]),
+                    len([c for c in all_customers if int(c.loyalty_points or 0) > 15])
                 ]
             },
             "top_customers": {
@@ -734,58 +737,52 @@ def admin_create_purchase_order(request):
     if denial is not None:
         return denial
 
-    supplier_id = (request.form.get("supplier_id") or "").strip()
-    product_ids_raw = request.form.getlist("product_id[]")
-    qtys_raw = request.form.getlist("qty_ordered[]")
-    costs_raw = request.form.getlist("unit_cost[]")
-    if not product_ids_raw:
-        product_ids_raw = [request.form.get("product_id")]
-        qtys_raw = [request.form.get("qty_ordered")]
-        costs_raw = [request.form.get("unit_cost")]
+    supplier_id = (request.form.get("supplier_id") or "1").strip()
+    product_ids_raw = request.form.getlist("po_item_product_id[]")
+    qtys_raw = request.form.getlist("po_item_qty[]")
+    costs_raw = request.form.getlist("po_item_unit_cost[]")
+    unit_cost = float(cost_str) if cost_str else 0.0
+    total_cost = round(sum([item["qty_ordered"] * (item["unit_cost"] or 0.0) for item in po_items_payload]), 2)
 
     panel = (request.args.get("panel") or "purchase-panel").strip()
+    
     if not supplier_id:
         return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel={panel}&msg=Fill+all+PO+fields")
+
     po_items_payload = []
-    for idx in range(max(len(product_ids_raw), len(qtys_raw), len(costs_raw))):
-        product_id_raw = ((product_ids_raw[idx] if idx < len(product_ids_raw) else "") or "").strip()
-        qty_ordered_raw = ((qtys_raw[idx] if idx < len(qtys_raw) else "") or "").strip()
-        unit_cost_raw = ((costs_raw[idx] if idx < len(costs_raw) else "") or "").strip()
-        if not product_id_raw and not qty_ordered_raw and not unit_cost_raw:
-            continue
+    for idx in range(len(product_ids_raw)):
         try:
-            product_id = int(product_id_raw)
-            qty_ordered = int(qty_ordered_raw)
-            unit_cost = float(unit_cost_raw)
-        except ValueError:
-            return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel={panel}&msg=Invalid+PO+values")
-        if qty_ordered <= 0 or unit_cost < 0:
-            return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel={panel}&msg=PO+quantity/cost+is+invalid")
-        po_items_payload.append({
-            "product_id": product_id,
-            "qty_ordered": qty_ordered,
-            "unit_cost": unit_cost,
-        })
+            p_id_str = product_ids_raw[idx].strip()
+            qty_str = qtys_raw[idx].strip()
+            cost_str = costs_raw[idx].strip()
+            
+            if not p_id_str: continue
+            
+            p_id = int(p_id_str)
+            qty = int(qty_str)
+            cost = float(cost_str)
+            
+            if qty > 0:
+                po_items_payload.append({
+                    "product_id": p_id,
+                    "qty_ordered": qty,
+                    "unit_cost": cost,
+                })
+        except (ValueError, IndexError):
+            continue
+
     if not po_items_payload:
         return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel={panel}&msg=Add+at+least+one+PO+item")
 
     db_session = SessionProd()
     try:
         cashier_id = resolve_staff_cashier_id(db_session, user_id)
-        if cashier_id is None:
-            return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel={panel}&msg=No+valid+staff+cashier+record")
-
-        supplier = db_session.query(Supplier).filter_by(id=supplier_id).first()
-        
-        if supplier is None:
-            return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel={panel}&msg=Supplier+not+found")
-
         order_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         total_cost = round(sum([item["qty_ordered"] * item["unit_cost"] for item in po_items_payload]), 2)
         
         po = Purchase_Order(
-            supplier_id=supplier.id,
-            user_id=cashier_id, # Changed from cashier_id to user_id
+            supplier_id=int(supplier_id),
+            user_id=cashier_id or user_id,
             order_date=order_date,
             total_cost=total_cost,
             status="pending"
@@ -802,6 +799,9 @@ def admin_create_purchase_order(request):
                 unit_cost=payload["unit_cost"]
             ))
         db_session.commit()
+    except Exception as e:
+        db_session.rollback()
+        return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel={panel}&msg=Error:+{quote_plus(str(e))}")
     finally:
         db_session.close()
 
@@ -844,7 +844,7 @@ def admin_receive_purchase_order(request, po_id):
                 item.qty_received = (item.qty_received or 0) + remaining
                 db_session.add(Stock_Movement(
                     product_id=product.id,
-                    cashier_id=cashier_id,
+                    user_id=cashier_id,
                     type="IN",
                     quantity=remaining,
                     reason=f"PO #{po.id} received",
@@ -856,6 +856,33 @@ def admin_receive_purchase_order(request, po_id):
     finally:
         db_session.close()
     return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel={panel}&msg=PO+received")
+
+def update_po_status(request, po_id): 
+    new_status = request.form.get("status")
+    db_session = SessionProd()
+    try:
+        po = db_session.query(Purchase_Order).filter_by(id=po_id).first()
+        if po:
+            po.status = new_status
+            db_session.commit()
+    finally:
+        db_session.close()
+    return redirect_admin_dashboard(request, panel_default="purchase-panel", msg="Status Updated")
+
+def update_product_status(request, product_id):
+    user_id, is_admin, denial = require_admin(request)
+    if denial is not None: return denial
+    
+    new_status = request.form.get("status")
+    db_session = SessionProd()
+    try:
+        product = db_session.query(Product).filter_by(id=product_id).first()
+        if product:
+            product.status = new_status
+            db_session.commit()
+    finally:
+        db_session.close()
+    return redirect_admin_dashboard(request, panel_default="products-panel", msg="Product Updated")
 
 def admin_update_sale_status(request, sale_id):
     user_id, is_admin, denial = require_admin(request)
@@ -885,14 +912,21 @@ def admin_pos_add_product(request, product_id):
     try:
         cashier_id = resolve_staff_cashier_id(db_session, user_id)
         product = db_session.query(Product).filter_by(id=product_id).first()
+        
         if product and (product.stock or 0) > 0:
-            existing = db_session.query(Pos_Cart_Item).filter_by(cashier_id=cashier_id, product_id=product_id).first()
-            if existing: existing.quantity += 1
-            else: db_session.add(Pos_Cart_Item(cashier_id=cashier_id, product_id=product_id, quantity=1))
+            existing = db_session.query(Pos_Cart_Item).filter_by(user_id=cashier_id, product_id=product_id).first()
+            
+            if existing: 
+                existing.quantity += 1
+            else: 
+                db_session.add(Pos_Cart_Item(user_id=cashier_id, product_id=product_id, quantity=1))
+            
             db_session.commit()
             msg = "Added+to+POS"
-        else: msg = "Out+of+stock"
-    finally: db_session.close()
+        else: 
+            msg = "Out+of+stock"
+    finally: 
+        db_session.close()
     return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel={panel}&msg={msg}")
 
 def admin_pos_update_item(request, item_id):
@@ -902,7 +936,7 @@ def admin_pos_update_item(request, item_id):
     db_session = SessionProd()
     try:
         cashier_id = resolve_staff_cashier_id(db_session, user_id)
-        item = db_session.query(Pos_Cart_Item).filter_by(id=item_id, cashier_id=cashier_id).first()
+        item = db_session.query(Pos_Cart_Item).filter_by(id=item_id, user_id=cashier_id).first()
         if item:
             if action == "inc": item.quantity += 1
             elif action == "dec":
@@ -918,7 +952,7 @@ def admin_pos_remove_item(request, item_id):
     db_session = SessionProd()
     try:
         cashier_id = resolve_staff_cashier_id(db_session, user_id)
-        item = db_session.query(Pos_Cart_Item).filter_by(id=item_id, cashier_id=cashier_id).first()
+        item = db_session.query(Pos_Cart_Item).filter_by(id=item_id, user_id=cashier_id).first()
         if item:
             db_session.delete(item)
             db_session.commit()
@@ -931,7 +965,7 @@ def admin_pos_clear(request):
     db_session = SessionProd()
     try:
         cashier_id = resolve_staff_cashier_id(db_session, user_id)
-        db_session.query(Pos_Cart_Item).filter_by(cashier_id=cashier_id).delete()
+        db_session.query(Pos_Cart_Item).filter_by(user_id=cashier_id).delete()
         db_session.commit()
     finally: db_session.close()
     return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel=pos-panel")
@@ -955,7 +989,7 @@ def admin_pos_process_sale(request):
         cashier_id = resolve_staff_cashier_id(db_session, user_id)
         rows = db_session.query(Pos_Cart_Item, Product).join(
             Product, Pos_Cart_Item.product_id == Product.id
-        ).filter(Pos_Cart_Item.cashier_id == cashier_id).all()
+        ).filter(Pos_Cart_Item.user_id == cashier_id).all()
         
         if not rows:
             return redirect(base_pos_url + "&msg=Cart+empty")
@@ -1019,7 +1053,7 @@ def admin_pos_process_sale(request):
             product.stock = max(product.stock - item.quantity, 0)
             db_session.add(Stock_Movement(
                 product_id=product.id, 
-                cashier_id=cashier_id, 
+                user_id=cashier_id, 
                 type="OUT", 
                 quantity=item.quantity, 
                 reason=f"POS Sale #{sale.id}", 
@@ -1066,30 +1100,24 @@ def admin_register_customer(request):
         return denial
 
     panel = (request.args.get("panel") or "customers-panel").strip()
-    name = (request.form.get("name") or "").strip()
+    first_name = (request.form.get("first_name") or "").strip() 
+    last_name = (request.form.get("last_name") or "").strip()   
     phone = (request.form.get("phone") or "").strip()
     email = (request.form.get("email") or "").strip()
 
-    if not name or not email:
-        return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel={panel}&msg=Name+and+email+are+required")
+    if not first_name or not email: 
+        return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel={panel}&msg=Required+fields+missing")
 
     dbu = SessionUser()
     try:
-        existing = dbu.query(User).filter_by(email=email).first()
-        if existing:
-            return redirect(f"/admin_dashboard?admin={is_admin}&user_id={user_id}&panel={panel}&msg=Email+already+exists")
-
-        # Admin-created customers get a default password so the record is valid.
-        default_password_hash = generate_password_hash("customer123")
-
         dbu.add(User(
-            first_name=name,
+            first_name=first_name,
+            last_name=last_name,
             phone=phone,
             email=email,
-            password=default_password_hash,
+            password=generate_password_hash("customer123"),
             role='customer',
         ))
-
         dbu.commit()
     finally:
         dbu.close()
@@ -1162,10 +1190,13 @@ def add_to_cart(request, product_id):
     user_id = get_user_id(request)
     if user_id is None: return redirect("/login")
     db_session = SessionProd()
-    existing = db_session.query(Cart_Item).filter_by(user_id=user_id, product_id=product_id).first()
-    if existing: existing.quantity += 1
-    else: db_session.add(Cart_Item(user_id=user_id, product_id=product_id, quantity=1))
-    db_session.commit()
+    product = db_session.query(Product).get(product_id)
+    if product and (product.stock or 0) > 0:
+        existing = db_session.query(Cart_Item).filter_by(user_id=user_id, product_id=product_id).first()
+        if existing: existing.quantity += 1
+        else: db_session.add(Cart_Item(user_id=user_id, product_id=product_id, quantity=1))
+        product.stock -= 1
+        db_session.commit()
     db_session.close()
     return redirect(f"/products?msg=Added&user_id={user_id}&admin={get_is_admin(request)}")
 
@@ -1185,24 +1216,38 @@ def update_cart_quantity(request, item_id):
     user_id = get_user_id(request)
     action = request.args.get("action", "").lower()
     db_session = SessionProd()
-    item = db_session.query(Cart_Item).filter_by(id=item_id, user_id=user_id).first()
-    if item:
-        if action == "inc": item.quantity += 1
-        elif action == "dec":
-            item.quantity -= 1
-            if item.quantity <= 0: db_session.delete(item)
-        db_session.commit()
-    db_session.close()
+    try:
+        item = db_session.query(Cart_Item).filter_by(id=item_id, user_id=user_id).first()
+        if item:
+            product = db_session.query(Product).get(item.product_id)
+            if action == "inc":
+                if product and (product.stock or 0) > 0:
+                    item.quantity += 1
+                    product.stock -= 1
+            elif action == "dec":
+                item.quantity -= 1
+                if product: product.stock += 1 
+                if item.quantity <= 0:
+                    db_session.delete(item)
+            db_session.commit()
+    finally:
+        db_session.close()
     return redirect(f"/cart?user_id={user_id}&admin={get_is_admin(request)}")
 
 def remove_from_cart(request, item_id):
     user_id = get_user_id(request)
     db_session = SessionProd()
-    item = db_session.query(Cart_Item).filter_by(id=item_id, user_id=user_id).first()
-    if item:
-        db_session.delete(item)
-        db_session.commit()
-    db_session.close()
+    try:
+        item = db_session.query(Cart_Item).filter_by(id=item_id, user_id=user_id).first()
+        if item:
+            product = db_session.query(Product).get(item.product_id)
+            if product:
+                product.stock += item.quantity
+            
+            db_session.delete(item)
+            db_session.commit()
+    finally:
+        db_session.close()
     return redirect(f"/cart?user_id={user_id}&admin={get_is_admin(request)}")
 
 def checkout(request):
